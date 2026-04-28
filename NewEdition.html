@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Who Tells the Story</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300;1,9..144,400&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:#F7F4EF;color:#1A1714;font-family:'Outfit',sans-serif;overflow-x:hidden;line-height:1.6}
+:root{
+  --bg:#F7F4EF;--bg2:#F0EDE7;--bg3:#E8E4DC;
+  --white:#FDFCFA;--ink:#1A1714;--ink2:#2E2B27;
+  --muted:#7A7268;--faint:#C8C3BA;--rule:#DDD9D2;
+  --terra:#B85C38;--terra-dim:#8A4028;--terra-pale:#F2E8E3;--terra-mid:rgba(184,92,56,0.1);
+  --navy:#1E3A5F;--navy2:#2C5282;--navy-pale:#E8EFF7;
+  --sage:#4A6741;--sage2:#6A9460;--sage-pale:#EBF2E8;
+  --serif:'Fraunces',Georgia,serif;--body:'Outfit',sans-serif;--mono:'JetBrains Mono',monospace;
+  --ease:cubic-bezier(0.16,1,0.3,1)
+}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--faint);border-radius:2px}
+body{cursor:none}
+#cur{position:fixed;width:9px;height:9px;background:var(--terra);border-radius:50%;pointer-events:none;z-index:99999;transform:translate(-50%,-50%);transition:width .2s var(--ease),height .2s var(--ease),background .2s}
+#cur.big{width:36px;height:36px;background:transparent;border:1.5px solid var(--terra);opacity:.6}
+#prog{position:fixed;top:0;left:0;height:2px;background:var(--terra);z-index:9000;width:0%;transition:width .08s linear}
+
+/* SPLASH SCREEN — stays until clicked */
+#splash{
+  position:fixed;inset:0;background:#1A1714;z-index:9999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:0;overflow:hidden;transition:opacity .9s var(--ease),transform .9s var(--ease);
+}
+#splash.gone{opacity:0;transform:scale(1.04);pointer-events:none}
+.splash-noise{position:absolute;inset:0;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px}
+.splash-glow{position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(184,92,56,.12),transparent 70%);animation:glowpulse 4s ease-in-out infinite;top:50%;left:50%;transform:translate(-50%,-50%)}
+@keyframes glowpulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.6}50%{transform:translate(-50%,-50%) scale(1.2);opacity:1}}
+.splash-line-top{position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(to right,transparent,rgba(184,92,56,.3),transparent);animation:lineslide 3s ease-in-out infinite}
+@keyframes lineslide{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.splash-eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:5px;text-transform:uppercase;color:rgba(184,92,56,.6);margin-bottom:36px;animation:fadeup .8s var(--ease) .2s both}
+.splash-title{font-family:var(--serif);font-weight:300;font-size:clamp(52px,9vw,110px);color:#F7F4EF;letter-spacing:-3px;line-height:1.05;text-align:center;margin-bottom:48px;animation:fadeup .9s var(--ease) .4s both}
+.splash-title em{font-style:italic;color:var(--terra);display:block}
+.splash-meta{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:56px;animation:fadeup .8s var(--ease) .6s both}
+.splash-authors{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(247,244,239,.35)}
+.splash-course{font-family:var(--mono);font-size:8px;letter-spacing:2px;color:rgba(247,244,239,.2)}
+.splash-enter{
+  font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;
+  color:rgba(247,244,239,.5);border:1px solid rgba(247,244,239,.15);
+  padding:14px 40px;cursor:none;background:transparent;
+  transition:color .2s,border-color .2s,background .2s;
+  animation:fadeup .8s var(--ease) .9s both;
+  position:relative;overflow:hidden;
+}
+.splash-enter::before{content:'';position:absolute;inset:0;background:rgba(184,92,56,.08);transform:scaleX(0);transform-origin:left;transition:transform .3s var(--ease)}
+.splash-enter:hover{color:rgba(247,244,239,.9);border-color:rgba(184,92,56,.5)}
+.splash-enter:hover::before{transform:scaleX(1)}
+.splash-facts{position:absolute;bottom:40px;display:flex;gap:48px;animation:fadeup .8s var(--ease) 1.1s both}
+.splash-fact{text-align:center}
+.splash-fact-n{font-family:var(--serif);font-size:28px;font-style:italic;color:var(--terra);line-height:1}
+.splash-fact-l{font-family:var(--mono);font-size:7px;letter-spacing:3px;text-transform:uppercase;color:rgba(247,244,239,.25);margin-top:4px}
+.splash-ticker{position:absolute;bottom:0;left:0;right:0;height:28px;background:rgba(184,92,56,.08);border-top:1px solid rgba(184,92,56,.15);overflow:hidden;display:flex;align-items:center}
+.ticker-inner{display:flex;gap:0;animation:ticker 30s linear infinite;white-space:nowrap}
+.ticker-item{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:rgba(184,92,56,.5);padding:0 40px}
+@keyframes fadeup{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* NAV */
+#nav{position:fixed;left:0;top:0;bottom:0;width:232px;background:var(--white);border-right:1px solid var(--rule);display:flex;flex-direction:column;z-index:400;padding:0 0 24px;transition:transform .35s var(--ease)}
+.nav-brand{padding:22px 24px 22px;border-bottom:1px solid var(--rule);margin-bottom:16px}
+.nav-brand-title{font-family:var(--serif);font-weight:400;font-style:italic;font-size:15px;color:var(--ink);line-height:1.25;margin-bottom:3px}
+.nav-brand-sub{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.nav-scroll{flex:1;overflow-y:auto;padding:0 10px;scrollbar-width:none}
+.nav-scroll::-webkit-scrollbar{display:none}
+.nav-group-label{font-family:var(--mono);font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--faint);padding:12px 14px 5px}
+.nav-link{display:flex;align-items:center;gap:9px;padding:7px 14px;font-family:var(--body);font-size:12px;font-weight:400;color:var(--muted);text-decoration:none;border-radius:4px;cursor:none;transition:background .15s,color .15s;border-left:2px solid transparent;margin-left:-2px}
+.nav-link:hover{color:var(--ink);background:var(--bg)}
+.nav-link.on{color:var(--terra);border-left-color:var(--terra);background:var(--terra-mid);font-weight:500}
+.nav-n{font-family:var(--mono);font-size:9px;color:var(--faint);width:16px;flex-shrink:0}
+.nav-link.on .nav-n{color:var(--terra-dim)}
+.nav-foot{padding:16px 24px 0;border-top:1px solid var(--rule)}
+.nav-foot-t{font-family:var(--mono);font-size:8px;letter-spacing:1px;color:var(--faint);line-height:1.7}
+#burger{display:none;position:fixed;top:14px;right:14px;z-index:500;width:38px;height:38px;background:var(--white);border:1px solid var(--rule);border-radius:4px;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:none}
+.bline{width:17px;height:1.5px;background:var(--ink);transition:all .25s;border-radius:1px}
+#burger.x .bline:nth-child(1){transform:rotate(45deg) translate(4px,4px)}
+#burger.x .bline:nth-child(2){opacity:0}
+#burger.x .bline:nth-child(3){transform:rotate(-45deg) translate(4px,-4px)}
+
+/* MAIN */
+#main{margin-left:232px}
+.sec{padding:80px 64px;position:relative}
+.sec+.sec{border-top:1px solid var(--rule)}
+.sec-inner{max-width:840px}
+.sec-inner.wide{max-width:1020px}
+.eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--terra);margin-bottom:12px}
+.sec-title{font-family:var(--serif);font-weight:300;font-size:clamp(32px,4vw,52px);line-height:1.05;letter-spacing:-1px;color:var(--ink);margin-bottom:10px}
+.sec-title em{font-style:italic;color:var(--terra)}
+.sec-lead{font-family:var(--body);font-size:16px;font-weight:300;color:var(--muted);line-height:1.75;margin-bottom:44px;max-width:620px}
+.prose{font-family:var(--body);font-size:15px;line-height:1.85;color:var(--ink2)}
+.prose p{margin-bottom:18px}
+.prose p:last-child{margin-bottom:0}
+.prose strong{color:var(--ink);font-weight:600}
+.prose em{color:var(--terra);font-style:italic}
+
+/* REVEAL ANIMATIONS */
+.rv{opacity:0;transform:translateY(24px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.rv.in{opacity:1;transform:none}
+.rv.d1{transition-delay:.1s}.rv.d2{transition-delay:.2s}.rv.d3{transition-delay:.3s}.rv.d4{transition-delay:.4s}
+.rv-left{opacity:0;transform:translateX(-24px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.rv-left.in{opacity:1;transform:none}
+.rv-scale{opacity:0;transform:scale(.96);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.rv-scale.in{opacity:1;transform:none}
+
+.pq{border-left:3px solid var(--terra);padding:16px 22px;margin:28px 0;background:var(--terra-mid)}
+.pq-t{font-family:var(--serif);font-size:18px;font-style:italic;line-height:1.55;color:var(--terra-dim)}
+.pq-a{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:7px}
+.note{background:var(--bg2);border:1px solid var(--rule);padding:18px 22px;margin:20px 0;border-radius:2px}
+.note-l{font-family:var(--mono);font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.note-b{font-family:var(--body);font-size:13px;line-height:1.75;color:var(--muted);font-style:italic}
+
+/* HERO */
+#hero{min-height:100vh;padding:0;background:var(--ink);display:grid;grid-template-columns:1fr 1fr;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 65% 45%,rgba(184,92,56,.08),transparent 55%)}
+.hero-scan{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,255,255,.01) 3px,rgba(255,255,255,.01) 4px);pointer-events:none}
+.hero-l{padding:0 64px 72px;display:flex;flex-direction:column;justify-content:flex-end;position:relative;z-index:1;border-right:1px solid rgba(247,244,239,.06)}
+.hero-ey{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(247,244,239,.3);margin-bottom:22px;animation:fadeup .8s var(--ease) .2s both}
+.hero-h1{font-family:var(--serif);font-weight:300;font-size:clamp(44px,6.5vw,82px);line-height:.96;letter-spacing:-2px;color:#F7F4EF;margin-bottom:14px;animation:fadeup .9s var(--ease) .35s both}
+.hero-h1 em{font-style:italic;color:var(--terra)}
+.hero-sub{font-family:var(--body);font-weight:300;font-size:14px;line-height:1.7;color:rgba(247,244,239,.4);max-width:360px;margin-bottom:44px;animation:fadeup .8s var(--ease) .5s both}
+.hero-authors{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(247,244,239,.28);margin-bottom:10px;animation:fadeup .8s var(--ease) .65s both}
+.hero-course{font-family:var(--mono);font-size:8px;letter-spacing:2px;color:rgba(247,244,239,.18);animation:fadeup .8s var(--ease) .75s both}
+.hero-r{display:flex;flex-direction:column;justify-content:flex-end;padding:0 52px 72px;gap:20px;position:relative;z-index:1;animation:fadeup .9s var(--ease) .5s both}
+.hero-pillars{background:rgba(247,244,239,.04);border:1px solid rgba(247,244,239,.08);padding:22px 24px;border-radius:2px}
+.hero-pillars-l{font-family:var(--mono);font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--terra);margin-bottom:14px;opacity:.85}
+.pillar-list{display:flex;flex-direction:column;gap:8px}
+.pillar-item{font-family:var(--body);font-size:12px;color:rgba(247,244,239,.48);display:flex;align-items:center;gap:9px;transition:color .2s}
+.pillar-item:hover{color:rgba(247,244,239,.8)}
+.pillar-dot{width:4px;height:4px;border-radius:50%;background:var(--terra);opacity:.6;flex-shrink:0}
+.hero-rq{background:rgba(247,244,239,.03);border:1px solid rgba(247,244,239,.07);padding:18px 22px;border-radius:2px}
+.hero-rq-l{font-family:var(--mono);font-size:8px;letter-spacing:3px;text-transform:uppercase;color:rgba(184,92,56,.7);margin-bottom:7px}
+.hero-rq-t{font-family:var(--serif);font-size:13px;font-style:italic;color:rgba(247,244,239,.38);line-height:1.55}
+.hero-qs{background:rgba(184,92,56,.07);border:1px solid rgba(184,92,56,.17);padding:18px 22px;border-radius:2px}
+.hero-qs-l{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:rgba(184,92,56,.6);margin-bottom:7px}
+.hero-qs-t{font-family:var(--serif);font-size:13px;font-style:italic;color:rgba(247,244,239,.4);line-height:1.6}
+
+/* ANIMATED STAT BAR at bottom of hero */
+
+
+/* INTRO */
+#intro{background:var(--white)}
+.intro-cols{display:grid;grid-template-columns:1fr 300px;gap:56px;align-items:start}
+.thesis-box{background:var(--bg);border:1px solid var(--rule);padding:28px;position:sticky;top:72px;border-radius:2px}
+.thesis-box-l{font-family:var(--mono);font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--terra);margin-bottom:10px}
+.thesis-box-q{font-family:var(--serif);font-style:italic;font-size:15px;line-height:1.6;color:var(--ink);margin-bottom:14px}
+.thesis-box-b{font-family:var(--body);font-size:13px;line-height:1.75;color:var(--muted)}
+
+/* KEY FACTS STRIP */
+.facts-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule);margin:36px 0;border-radius:2px;overflow:hidden}
+.fact-card{background:var(--white);padding:20px 18px;position:relative;overflow:hidden}
+.fact-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--terra);transform:scaleX(0);transform-origin:left;transition:transform .4s var(--ease)}
+.fact-card:hover::after{transform:scaleX(1)}
+.fact-l{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--terra);margin-bottom:10px}
+.fact-b{font-family:var(--body);font-size:13px;line-height:1.7;color:var(--ink2)}
+
+/* PATIENCE */
+#patience{background:var(--bg)}
+.patience-cols{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--rule);border-radius:2px;overflow:hidden;margin:36px 0}
+.pat-card{background:var(--white);padding:28px 24px}
+.pat-l{font-family:var(--mono);font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--terra);margin-bottom:10px}
+.pat-q{font-family:var(--serif);font-size:16px;font-style:italic;line-height:1.6;color:var(--ink);margin-bottom:12px}
+.pat-b{font-family:var(--body);font-size:13px;line-height:1.75;color:var(--muted)}
+
+/* ORIGIN */
+#origin{background:var(--white)}
+.stat-table{border:1px solid var(--rule);overflow:hidden;margin:32px 0;border-radius:2px}
+.st-row{display:grid;grid-template-columns:150px 1fr;border-bottom:1px solid var(--rule);transition:background .15s}
+.st-row:last-child{border-bottom:none}
+.st-row:hover{background:var(--bg)}
+.st-k{padding:12px 16px;font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);background:var(--bg2);border-right:1px solid var(--rule)}
+.st-v{padding:12px 16px;font-family:var(--body);font-size:14px;color:var(--ink2)}
+.st-v em{color:var(--terra);font-style:italic}
+
+/* TIMELINE */
+.timeline{position:relative;margin:36px 0;padding-left:24px}
+.timeline::before{content:'';position:absolute;left:0;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,var(--terra),rgba(184,92,56,.1))}
+.tl-item{position:relative;margin-bottom:28px;padding-left:28px}
+.tl-dot{position:absolute;left:-28px;top:4px;width:8px;height:8px;border-radius:50%;background:var(--terra);box-shadow:0 0 0 3px rgba(184,92,56,.15)}
+.tl-year{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--terra);margin-bottom:4px}
+.tl-title{font-family:var(--serif);font-size:16px;color:var(--ink);margin-bottom:5px}
+.tl-body{font-family:var(--body);font-size:13px;line-height:1.7;color:var(--muted)}
+
+/* ALBUM */
+#album{background:var(--bg)}
+.tracks{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:2px;overflow:hidden;margin:36px 0}
+.track{background:var(--white);padding:20px 18px;cursor:none;transition:background .2s,border-left-color .2s;border-left:2px solid transparent}
+.track:hover{background:var(--bg);border-left-color:var(--terra)}
+.track-n{font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--faint);margin-bottom:6px}
+.track-title{font-family:var(--serif);font-size:15px;color:var(--ink);margin-bottom:5px;line-height:1.2}
+.track-note{font-family:var(--body);font-size:12px;line-height:1.6;color:var(--muted)}
+.cr{border:1px solid var(--rule);border-radius:2px;overflow:hidden;margin:24px 0;background:var(--white)}
+.cr-hd{display:grid;grid-template-columns:52px 1fr;border-bottom:1px solid var(--rule)}
+.cr-n{display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:30px;font-weight:300;font-style:italic;color:var(--faint);background:var(--bg);border-right:1px solid var(--rule)}
+.cr-info{padding:16px 20px}
+.cr-label{font-family:var(--mono);font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--terra);margin-bottom:4px}
+.cr-song{font-family:var(--serif);font-size:17px;color:var(--ink);line-height:1.25}
+.cr-body{padding:22px 20px}
+.cr-note{margin-top:16px;padding:13px 16px;background:var(--terra-mid);border-left:2px solid var(--terra);border-radius:0 2px 2px 0}
+.cr-note-l{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--terra-dim);margin-bottom:4px}
+.cr-note-t{font-family:var(--body);font-size:13px;font-style:italic;line-height:1.65;color:var(--terra-dim)}
+
+/* INTERVIEW */
+#interview{background:var(--white)}
+.anatomy{border:1px solid var(--rule);border-radius:2px;overflow:hidden;margin:32px 0}
+.anat-row{display:grid;grid-template-columns:120px 1fr;border-bottom:1px solid var(--rule);transition:background .15s}
+.anat-row:last-child{border-bottom:none}
+.anat-row:hover{background:var(--bg)}
+.anat-k{padding:14px 16px;font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;background:var(--bg2);border-right:1px solid var(--rule);display:flex;align-items:flex-start;padding-top:16px}
+.anat-k.anchor{color:var(--terra)}.anat-k.frame{color:var(--navy2)}.anat-k.bobby{color:var(--sage)}.anat-k.edit{color:var(--muted)}
+.anat-v{padding:14px 18px;font-family:var(--body);font-size:14px;line-height:1.75;color:var(--ink2)}
+
+/* CONVO */
+#convo{background:var(--bg)}
+.baf{border:1px solid var(--rule);border-radius:2px;overflow:hidden;margin:32px 0}
+.baf-cols{display:grid;grid-template-columns:1fr 1fr;background:var(--bg2);border-bottom:1px solid var(--rule)}
+.baf-col-h{padding:11px 20px;font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase}
+.baf-col-h.alb{color:var(--sage);border-right:1px solid var(--rule)}.baf-col-h.int{color:var(--terra)}
+.baf-row{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--rule);transition:background .15s}
+.baf-row:last-child{border-bottom:none}.baf-row:hover{background:var(--white)}
+.baf-cell{padding:18px 20px;font-family:var(--body);font-size:14px;line-height:1.75;color:var(--ink2)}
+.baf-cell.alb{border-right:1px solid var(--rule)}
+.baf-topic{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+
+/* BLACK LOVE */
+#love{background:var(--white)}
+.love-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--rule);border-radius:2px;overflow:hidden;margin:32px 0}
+.love-card{background:var(--white);padding:26px 24px}
+.love-card-l{font-family:var(--mono);font-size:8px;letter-spacing:3px;text-transform:uppercase;margin-bottom:9px}
+.love-card.alb .love-card-l{color:var(--sage)}.love-card.int .love-card-l{color:var(--terra)}
+.love-card-h{font-family:var(--serif);font-size:17px;color:var(--ink);margin-bottom:13px;line-height:1.2}
+.love-card-b{font-family:var(--body);font-size:14px;line-height:1.8;color:var(--ink2)}
+.tc-quote{border:1px solid var(--rule);background:var(--bg);padding:20px 22px;margin:16px 0;border-radius:2px;border-left:2px solid transparent;transition:border-left-color .2s}
+.tc-quote:hover{border-left-color:var(--terra)}
+.tc-q{font-family:var(--serif);font-size:15px;font-style:italic;line-height:1.6;color:var(--ink2);margin-bottom:7px}
+.tc-a{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+
+/* ICON */
+#icon{background:var(--bg)}
+.icon-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--rule);border-radius:2px;overflow:hidden;margin:32px 0}
+.icon-card{background:var(--white);padding:26px 22px;transition:background .15s}
+.icon-card:hover{background:var(--bg)}
+.icon-sub{font-family:var(--serif);font-size:19px;color:var(--ink);margin-bottom:3px}
+.icon-type{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;margin-bottom:13px}
+.icon-card.trayvon .icon-type{color:var(--terra)}.icon-card.obama .icon-type{color:var(--sage)}.icon-card.diana .icon-type{color:var(--navy2)}.icon-card.lebron .icon-type{color:var(--muted)}
+.icon-card-body{font-family:var(--body);font-size:13px;line-height:1.75;color:var(--ink2)}
+.icon-card-body strong{color:var(--ink);font-weight:600}
+.sewell-quote{background:var(--bg);border:1px solid var(--rule);padding:20px 22px;margin:12px 0;border-radius:2px;border-left:2px solid var(--terra)}
+.sq-t{font-family:var(--serif);font-size:14px;font-style:italic;line-height:1.6;color:var(--terra-dim)}
+.sq-a{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:6px}
+
+/* CELEBRITY DEBT */
+#debt{background:var(--white)}
+.debt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--rule);border-radius:2px;overflow:hidden;margin:32px 0}
+.debt-card{background:var(--white);padding:24px 20px;position:relative;overflow:hidden}
+.debt-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--terra);transform:scaleX(0);transform-origin:left;transition:transform .4s var(--ease)}
+.debt-card:hover::before{transform:scaleX(1)}
+.debt-n{font-family:var(--serif);font-size:36px;font-style:italic;font-weight:300;color:var(--faint);margin-bottom:8px}
+.debt-title{font-family:var(--serif);font-size:17px;color:var(--ink);margin-bottom:4px}
+.debt-sub{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--terra);margin-bottom:12px}
+.debt-body{font-family:var(--body);font-size:13px;line-height:1.75;color:var(--ink2)}
+
+/* MIMESIS */
+#mimesis{background:var(--bg)}
+.chain{display:flex;flex-direction:column;gap:1px;margin:32px 0}
+.chain-item{background:var(--white);border:1px solid var(--rule);border-radius:2px;overflow:hidden;display:grid;grid-template-columns:56px 1fr;margin-bottom:1px;transition:border-color .2s}
+.chain-item:hover{border-color:var(--terra)}
+.chain-n{display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:24px;font-style:italic;color:var(--faint);background:var(--bg2);border-right:1px solid var(--rule)}
+.chain-c{padding:16px 18px}
+.chain-l{font-family:var(--mono);font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--terra);margin-bottom:6px}
+.chain-t{font-family:var(--body);font-size:14px;line-height:1.75;color:var(--ink2)}
+
+/* AUTOBIOGRAPHY */
+#auto{background:var(--white)}
+.auto-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--rule);border-radius:2px;overflow:hidden;margin:32px 0}
+.auto-card{background:var(--white);padding:24px 22px;transition:background .15s}
+.auto-card:hover{background:var(--bg)}
+.auto-card-l{font-family:var(--mono);font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--terra);margin-bottom:8px}
+.auto-card-q{font-family:var(--serif);font-size:15px;font-style:italic;line-height:1.65;color:var(--ink2);margin-bottom:8px}
+.auto-card-a{font-family:var(--mono);font-size:8px;letter-spacing:1px;color:var(--muted)}
+.voices-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--rule);border-radius:2px;overflow:hidden;margin:32px 0}
+.voice-card{background:var(--white);padding:22px 18px;transition:background .15s}
+.voice-card:hover{background:var(--bg)}
+.voice-l{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.voice-name{font-family:var(--serif);font-size:16px;color:var(--ink);margin-bottom:10px}
+.voice-q{font-family:var(--body);font-size:13px;font-style:italic;line-height:1.7;color:var(--ink2)}
+
+/* BLIGHT */
+#blight{background:var(--bg)}
+.blight-list{display:flex;flex-direction:column;gap:1px;margin:32px 0}
+.blight-item{background:var(--white);display:grid;grid-template-columns:46px 1fr;border:1px solid var(--rule);border-radius:2px;overflow:hidden;margin-bottom:1px;transition:border-color .2s}
+.blight-item:hover{border-color:var(--terra)}
+.blight-n{display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:20px;font-style:italic;color:var(--faint);background:var(--bg2);border-right:1px solid var(--rule)}
+.blight-c{padding:16px 18px}
+.blight-cl{font-family:var(--mono);font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--terra);margin-bottom:6px}
+.blight-ct{font-family:var(--body);font-size:14px;line-height:1.75;color:var(--ink2)}
+
+/* PROFILES */
+#profiles{background:var(--white)}
+.prof-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--rule);border-radius:2px;overflow:hidden;margin:32px 0}
+.prof-card{background:var(--white);padding:0;cursor:none;transition:background .15s}
+.prof-card:hover{background:var(--bg)}
+.prof-top{padding:22px 20px 16px;border-bottom:1px solid var(--rule)}
+.prof-init{font-family:var(--serif);font-style:italic;font-size:40px;font-weight:300;line-height:1;margin-bottom:9px}
+.prof-card.ralph .prof-init{color:var(--terra)}.prof-card.bobby .prof-init{color:var(--terra-dim)}.prof-card.ronnie .prof-init{color:var(--sage)}.prof-card.ricky .prof-init{color:var(--navy2)}.prof-card.michael .prof-init{color:var(--muted)}.prof-card.johnny .prof-init{color:var(--ink)}
+.prof-name{font-family:var(--serif);font-size:16px;color:var(--ink);margin-bottom:2px}
+.prof-dob{font-family:var(--mono);font-size:8px;letter-spacing:1px;color:var(--muted);margin-bottom:7px}
+.prof-role{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--faint)}
+.prof-body{padding:16px 20px}
+.prof-bio{font-family:var(--body);font-size:13px;line-height:1.7;color:var(--ink2);margin-bottom:12px}
+.prof-solo-l{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.prof-solo-t{font-family:var(--body);font-size:12px;line-height:1.65;color:var(--muted)}
+.bobby-deep{background:var(--bg);border:1px solid var(--rule);border-left:3px solid var(--terra);padding:40px;margin-top:40px;border-radius:0 2px 2px 0}
+.bobby-deep-h{font-family:var(--serif);font-size:24px;color:var(--terra);margin-bottom:5px}
+.bobby-deep-s{font-family:var(--body);font-size:13px;color:var(--muted);margin-bottom:24px;font-style:italic}
+
+/* FUTURE */
+#future{background:var(--bg)}
+.future-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2px;background:var(--rule);border-radius:2px;overflow:hidden;margin:32px 0}
+.future-card{background:var(--white);padding:26px 22px;transition:background .15s}
+.future-card:hover{background:var(--bg2)}
+.future-card-l{font-family:var(--mono);font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--terra);margin-bottom:9px}
+.future-card-h{font-family:var(--serif);font-size:18px;color:var(--ink);margin-bottom:12px}
+.future-card-b{font-family:var(--body);font-size:14px;line-height:1.8;color:var(--ink2)}
+
+/* SOURCES */
+#sources{background:var(--white)}
+.source-list{display:flex;flex-direction:column;gap:1px;margin-top:32px}
+.src{background:var(--bg);display:grid;grid-template-columns:48px 1fr;border:1px solid var(--rule);border-radius:2px;overflow:hidden;transition:border-color .2s;margin-bottom:1px}
+.src:hover{border-color:var(--terra)}
+.src-n{display:flex;align-items:flex-start;justify-content:center;padding-top:20px;font-family:var(--mono);font-size:11px;color:var(--faint);background:var(--bg2);border-right:1px solid var(--rule)}
+.src-c{padding:18px 20px}
+.src-type{font-family:var(--mono);font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.src-cite{font-family:var(--body);font-size:14px;color:var(--ink);margin-bottom:6px;line-height:1.4}
+.src-cite em{font-style:italic}
+.src-ann{font-family:var(--body);font-size:13px;color:var(--muted);line-height:1.7}
+
+footer{background:var(--ink);padding:52px 64px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:48px}
+.ft-l{font-family:var(--mono);font-size:8px;letter-spacing:3px;text-transform:uppercase;color:rgba(247,244,239,.28);margin-bottom:14px}
+.ft-name{font-family:var(--serif);font-size:16px;color:rgba(247,244,239,.8);margin-bottom:2px}
+.ft-sub{font-family:var(--mono);font-size:8px;letter-spacing:1px;color:rgba(247,244,239,.22);margin-bottom:8px}
+.ft-text{font-family:var(--body);font-size:13px;line-height:1.7;color:rgba(247,244,239,.28)}
+.ft-bar{background:var(--ink2);padding:14px 64px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(247,244,239,.06)}
+.ft-copy{font-family:var(--mono);font-size:8px;letter-spacing:1px;color:rgba(247,244,239,.16)}
+
+@media(max-width:1080px){
+  #nav{transform:translateX(-100%)}
+  #nav.open{transform:none;box-shadow:4px 0 40px rgba(0,0,0,.08)}
+  #burger{display:flex}
+  #main{margin-left:0}
+  footer{margin-left:0;padding:40px 32px}
+  .ft-bar{padding:14px 32px}
+  #hero{grid-template-columns:1fr}
+  .hero-r{display:none}
+  .intro-cols{grid-template-columns:1fr}
+  .thesis-box{position:static}
+  .sec{padding:64px 32px}
+  .tracks{grid-template-columns:1fr 1fr}
+  .icon-grid,.love-grid,.auto-grid,.future-grid{grid-template-columns:1fr}
+  .prof-grid{grid-template-columns:1fr 1fr}
+  .baf-cols,.baf-row{grid-template-columns:1fr}
+  .baf-cell.alb{border-right:none;border-bottom:1px solid var(--rule)}
+  footer{grid-template-columns:1fr}
+  .debt-grid,.voices-grid,.facts-strip{grid-template-columns:1fr 1fr}
+}
+@media(max-width:640px){
+  .sec{padding:48px 20px}
+  .tracks,.prof-grid,.debt-grid,.voices-grid,.patience-cols,.facts-strip{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="cur"></div>
+<div id="prog"></div>
+
+<!-- SPLASH — stays until clicked -->
+<div id="splash">
+  <div class="splash-noise"></div>
+  <div class="splash-glow"></div>
+  <div class="splash-line-top"></div>
+  <div class="splash-eyebrow">AMST 2650 &nbsp; Cornell University &nbsp; Spring 2026</div>
+  <div class="splash-title">Who <em>Tells</em> the Story?</div>
+  <div class="splash-meta">
+    <div class="splash-authors">Obinna Njoku &nbsp; Trenton Banks &nbsp; Wyatt Tamamoto</div>
+    <div class="splash-course">AMST 2650 &nbsp; Introduction to African American Literature &nbsp; Dr. Chelsea M. Frazier</div>
+  </div>
+  <button class="splash-enter" onclick="enterSite()">Enter Project</button>
+  <div class="splash-facts">
+    <div class="splash-fact"><div class="splash-fact-n">1983</div><div class="splash-fact-l">Candy Girl</div></div>
+    <div class="splash-fact"><div class="splash-fact-n">42</div><div class="splash-fact-l">Sources</div></div>
+    <div class="splash-fact"><div class="splash-fact-n">2005</div><div class="splash-fact-l">NBC Interview</div></div>
+    <div class="splash-fact"><div class="splash-fact-n">15</div><div class="splash-fact-l">Sections</div></div>
+  </div>
+  <div class="splash-ticker">
+    <div class="ticker-inner">
+      <span class="ticker-item">New Edition</span><span class="ticker-item">Bobby Brown</span><span class="ticker-item">Candy Girl</span><span class="ticker-item">Orchard Park</span><span class="ticker-item">Whitney Houston</span><span class="ticker-item">NBC Interview</span><span class="ticker-item">New Jack Swing</span><span class="ticker-item">Streetwise Records</span><span class="ticker-item">Celebrity Debt</span><span class="ticker-item">Black Narrative Agency</span><span class="ticker-item">Maurice Starr</span><span class="ticker-item">Roxbury, Boston</span><span class="ticker-item">Mimesis and Propagation</span><span class="ticker-item">Who Tells the Story?</span>
+      <span class="ticker-item">New Edition</span><span class="ticker-item">Bobby Brown</span><span class="ticker-item">Candy Girl</span><span class="ticker-item">Orchard Park</span><span class="ticker-item">Whitney Houston</span><span class="ticker-item">NBC Interview</span><span class="ticker-item">New Jack Swing</span><span class="ticker-item">Streetwise Records</span><span class="ticker-item">Celebrity Debt</span><span class="ticker-item">Black Narrative Agency</span><span class="ticker-item">Maurice Starr</span><span class="ticker-item">Roxbury, Boston</span><span class="ticker-item">Mimesis and Propagation</span><span class="ticker-item">Who Tells the Story?</span>
+    </div>
+  </div>
+</div>
+
+<button id="burger" onclick="toggleNav()">
+  <div class="bline"></div><div class="bline"></div><div class="bline"></div>
+</button>
+
+<nav id="nav">
+  <div class="nav-brand">
+    <div class="nav-brand-title">Who Tells<br>the Story?</div>
+    <div class="nav-brand-sub">AMST 2650 &nbsp; Cornell</div>
+  </div>
+  <div class="nav-scroll">
+    <div class="nav-group-label">Project</div>
+    <a href="#hero" class="nav-link on"><span class="nav-n">00</span>Overview</a>
+    <a href="#intro" class="nav-link"><span class="nav-n">01</span>Introduction</a>
+    <a href="#patience" class="nav-link"><span class="nav-n">02</span>On Patience</a>
+    <a href="#origin" class="nav-link"><span class="nav-n">03</span>Who Is New Edition</a>
+    <div class="nav-group-label">The Texts</div>
+    <a href="#album" class="nav-link"><span class="nav-n">04</span>Candy Girl Album</a>
+    <a href="#interview" class="nav-link"><span class="nav-n">05</span>The Interview</a>
+    <a href="#convo" class="nav-link"><span class="nav-n">06</span>In Conversation</a>
+    <div class="nav-group-label">Themes</div>
+    <a href="#love" class="nav-link"><span class="nav-n">07</span>Black Love</a>
+    <a href="#icon" class="nav-link"><span class="nav-n">08</span>Agency and Iconicity</a>
+    <a href="#debt" class="nav-link"><span class="nav-n">09</span>Celebrity Debt</a>
+    <a href="#mimesis" class="nav-link"><span class="nav-n">10</span>Mimesis</a>
+    <a href="#blight" class="nav-link"><span class="nav-n">11</span>Black as Blight</a>
+    <div class="nav-group-label">People and Future</div>
+    <a href="#auto" class="nav-link"><span class="nav-n">12</span>Every Little Step</a>
+    <a href="#profiles" class="nav-link"><span class="nav-n">13</span>Member Profiles</a>
+    <a href="#future" class="nav-link"><span class="nav-n">14</span>The Future</a>
+    <a href="#sources" class="nav-link"><span class="nav-n">15</span>Sources</a>
+  </div>
+  <div class="nav-foot">
+    <div class="nav-foot-t">Njoku &nbsp; Banks &nbsp; Tamamoto<br>Dr. Chelsea M. Frazier<br>Spring 2026</div>
+  </div>
+</nav>
+
+<div id="main">
+
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-scan"></div>
+  <div class="hero-l">
+    <div class="hero-ey">AMST 2650 &nbsp; Digital Humanities Final Project &nbsp; Cornell University</div>
+    <h1 class="hero-h1">Who<br><em>Tells</em><br>the Story?</h1>
+    <p class="hero-sub">New Edition's Candy Girl (1983) and Bobby Brown's NBC interview (2005): two forms, one Black voice, and the question of what each form does to what passes through it.</p>
+    <div class="hero-authors">Obinna Njoku &nbsp; Trenton Banks &nbsp; Wyatt Tamamoto</div>
+    <div class="hero-course">AMST 2650 &nbsp; Introduction to African American Literature &nbsp; Cornell University</div>
+  </div>
+  <div class="hero-r">
+    <div class="hero-pillars">
+      <div class="hero-pillars-l">7 Research Pillars</div>
+      <div class="pillar-list">
+        <div class="pillar-item"><span class="pillar-dot"></span>The Black Sonic: Motown and Streetwise Records</div>
+        <div class="pillar-item"><span class="pillar-dot"></span>The Black Look: Fashion and Masculinity</div>
+        <div class="pillar-item"><span class="pillar-dot"></span>Historical Recurrence: Iconicity and the Past</div>
+        <div class="pillar-item"><span class="pillar-dot"></span>Evolution: Iconicity Changing Over Time</div>
+        <div class="pillar-item"><span class="pillar-dot"></span>Mimesis and Propagation: Appropriation by Society</div>
+        <div class="pillar-item"><span class="pillar-dot"></span>Celebrity Debt: What Do Celebrities Owe?</div>
+        <div class="pillar-item"><span class="pillar-dot"></span>The Future: Activism, Commerce, New Artists</div>
+      </div>
+    </div>
+    <div class="hero-rq">
+      <div class="hero-rq-l">Central Research Question</div>
+      <div class="hero-rq-t">How does biographical narrative formation operate differently in an artist's music than in subsequent television media portrayals, and who controls the terms of that difference?</div>
+    </div>
+    <div class="hero-qs">
+      <div class="hero-qs-l">Bobby Brown, Every Little Step</div>
+      <div class="hero-qs-t">"People need to understand that I love this industry with all my being. Entertainment is what I was bred for. Were you entertained? If you were, that's what matters."</div>
+    </div>
+  </div>
+
+</section>
+
+<section id="intro" class="sec">
+  <div class="sec-inner">
+    <div class="eyebrow">Introduction</div>
+    <h2 class="sec-title">The Form <em>Is</em> the Argument</h2>
+    <p class="sec-lead">Why the medium matters as much as the message, and what that means for Black artists navigating public life.</p>
+    <div class="facts-strip rv">
+      <div class="fact-card"><div class="fact-l">The Album</div><div class="fact-b">Makes no claim before New Edition speaks. The listener enters the sound directly, without context, without a narrator, without a frame.</div></div>
+      <div class="fact-card"><div class="fact-l">The Interview</div><div class="fact-b">Narrates Bobby Brown before he says a word. The anchor's frame is built and in place before the subject enters the room.</div></div>
+      <div class="fact-card"><div class="fact-l">What the Album Allows</div><div class="fact-b">Nine tracks holding unresolved emotional positions simultaneously. No single legible conclusion is required. The record ends open.</div></div>
+      <div class="fact-card"><div class="fact-l">What the Interview Requires</div><div class="fact-b">One legible answer per question. Uncertainty cannot be sustained. The anchor's arc determines where the conversation ends up.</div></div>
+    </div>
+    <div class="intro-cols">
+      <div class="prose rv">
+        <p>This project begins with a deceptively simple observation: the same person's story, told through different forms, produces fundamentally different relationships between the subject and the audience. New Edition's Candy Girl and Bobby Brown's 2005 NBC interview are separated by 22 years and connected by the arc of one career. Analytically, they represent two irreconcilably different machines for producing public meaning about a Black artist.</p>
+        <p>The vinyl record opens onto its subjects without mediation. No narrator arrives before New Edition to explain who they are. The music simply begins, mid-desire, mid-feeling, mid-life. Whatever meaning is made is made in the encounter between the performance and the listener's imagination. The form is, structurally, an act of trust.</p>
+        <p>The television interview operates by entirely different logic. The anchor's narration precedes the subject. Bobby Brown's career is summarized for the viewer before Bobby speaks a word. The frame is built before the subject enters it. <strong>To respond is already to accept that the frame required response.</strong></p>
+        <p>This is not a story about individual bias. It is a structural argument about what different media forms allow and foreclose for the Black subjects who pass through them, and why the form through which Black stories travel is never politically neutral.</p>
+      </div>
+      <div class="rv d2">
+        <div class="thesis-box">
+          <div class="thesis-box-l">Central Thesis</div>
+          <div class="thesis-box-q">"While Black musicians exercise meaningful creative agency through their music, television media re-stages Black narrative as legible spectacle, centering the wound and evacuating the new skin."</div>
+          <div class="thesis-box-b">The comparison of Candy Girl and the NBC interview is not biographical. It is a structural argument about media forms and their unequal consequences for Black self-representation.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="patience" class="sec">
+  <div class="sec-inner wide">
+    <div class="eyebrow">Jennifer Roberts on Patience</div>
+    <h2 class="sec-title">The Power of <em>Deceleration</em></h2>
+    <p class="sec-lead">Roberts's framework for immersive attention grounds the methodology of this project. Slow looking is not passive. It is a form of skilled apprehension that orients us to what the evidence actually contains.</p>
+    <div class="patience-cols rv">
+    <div class="pat-card">
+        <div class="pat-l">On Student Resistance</div>
+        <div class="pat-q">"At first many of the students resist being subjected to such a remedial exercise. How can there possibly be three hours' worth of incident and information on this small surface? How can there possibly be three hours' worth of things to see and think about in a single work of art? But after doing the assignment, students repeatedly tell me that they have been astonished by the potentials this process unlocked."</div>
+        <div class="pat-b">Roberts, Jennifer. "The Power of Patience: Teaching Students the Value of Deceleration and Immersive Attention." <em>Harvard Magazine,</em> 2013. (40)</div>
+      </div>
+      <div class="pat-card">
+        <div class="pat-l">On Deceleration as Method</div>
+        <div class="pat-q">"Deceleration, then, is a productive process, a form of skilled apprehension that can orient students in critical ways to the contemporary world. But I also want to argue that it is an essential skill for the understanding and interpretation of the historical world."</div>
+        <div class="pat-b">Roberts, Jennifer. "The Power of Patience: Teaching Students the Value of Deceleration and Immersive Attention." <em>Harvard Magazine,</em> 2013. (42)</div>
+      </div>
+    </div>
+    <div class="note rv">
+      <div class="note-l">Connection to Method</div>
+      <div class="note-b">Roberts's argument has a direct analog in the project's stakes: the media's rapid narrative about Bobby Brown is exactly the kind of fast, unreflective looking that deceleration is designed to correct. The NBC anchor's framing is the three-second glance. This project is the three-hour sit.</div>
+    </div>
+  </div>
+</section>
+
+<section id="origin" class="sec">
+  <div class="sec-inner wide">
+    <div class="eyebrow">Who Is New Edition</div>
+    <h2 class="sec-title">Five Boys from <em>Roxbury</em></h2>
+    <p class="sec-lead">Before the contracts, the solo careers, the tabloids: a neighborhood, a producer, and a sound that would reshape American popular music.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start">
+      <div class="prose rv">
+        <p>New Edition formed in 1978 in the Orchard Park housing project in Roxbury, Massachusetts. The group began as a talent contest entry and became a national phenomenon. Discovered by producer Maurice Starr, the group recorded Candy Girl for Streetwise Records in 1983. They were between 14 and 16 years old.</p>
+        <p>Bobby Brown described the commercial outcome plainly in his autobiography: "Our first album, called Candy Girl, was released in March 1983, when I had just turned fourteen, and it sold so many records it was hard for us to keep count. And how much did we make from it? We each got $500 and a VCR, a Betamax, so we could watch our own videos."</p>
+        <p>Brown also recalled the moment the first single hit the radio: "All of a sudden 'Candy Girl' started playing. We were on the radio! As it was playing, we were screaming and running to each other's apartments. People in Orchard Park were blasting it out of their windows." The contrast between this memory and the $500 payment is the economic foundation of everything that follows. <strong>The form travels. The credit does not.</strong></p>
+      </div>
+      <div class="rv d1">
+        <div class="stat-table">
+          <div class="st-row"><div class="st-k">Founded</div><div class="st-v">1978, Roxbury, Boston</div></div>
+          <div class="st-row"><div class="st-k">Members</div><div class="st-v">Tresvant, Brown, DeVoe, Bell, Bivins and Gill</div></div>
+          <div class="st-row"><div class="st-k">Debut Album</div><div class="st-v"><em>Candy Girl</em>, 1983, Streetwise Records</div></div>
+          <div class="st-row"><div class="st-k">Producer</div><div class="st-v">Maurice Starr (external authorship)</div></div>
+          <div class="st-row"><div class="st-k">Age at Recording</div><div class="st-v">14 to 16 years old</div></div>
+          <div class="st-row"><div class="st-k">Payment Received</div><div class="st-v">$500 and a Betamax VCR each</div></div>
+          <div class="st-row"><div class="st-k">Neighborhood</div><div class="st-v">Orchard Park Housing Project</div></div>
+          <div class="st-row"><div class="st-k">Legacy</div><div class="st-v">Founded the grammar of group R&B</div></div>
+        </div>
+        <div class="timeline rv d2" style="margin-top:32px">
+          <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">1978</div><div class="tl-title">New Edition Forms</div><div class="tl-body">Talent contest entry in Orchard Park, Roxbury. Five teenagers, one sound.</div></div>
+          <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">1983</div><div class="tl-title">Candy Girl Released</div><div class="tl-body">Platinum sales. $500 per member. The structural contradiction at the heart of their career.</div></div>
+          <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">1986</div><div class="tl-title">Bobby Departs</div><div class="tl-body">Labeled "bad boy" immediately. The departure that begins the reputational arc the 2005 interview must then address.</div></div>
+          <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">1988</div><div class="tl-title">Don't Be Cruel</div><div class="tl-body">Bobby invents New Jack Swing with Teddy Riley. He was not following a trend. He was making one.</div></div>
+          <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">1992</div><div class="tl-title">Bobby and Whitney Marry</div><div class="tl-body">The marriage that changes the terms of his celebrity in ways neither of them fully controlled.</div></div>
+          <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">2005</div><div class="tl-title">NBC Interview</div><div class="tl-body">Bobby as redeemer, not creator. Inside someone else's frame.</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="pq rv">
+      <div class="pq-t">"New Edition are not simply a music group who became famous. They are the latest instance of a structural position every generation of Black artists has occupied: the extraordinary creative contribution made under conditions of extraordinary contractual disadvantage."</div>
+      <div class="pq-a">Project Analysis</div>
+    </div>
+  </div>
+</section>
+
+<section id="album" class="sec">
+  <div class="sec-inner wide">
+    <div class="eyebrow">The Album</div>
+    <h2 class="sec-title"><em>Candy Girl</em>, Complete Analysis</h2>
+    <p class="sec-lead">Nine tracks. An emotional arc from desire to unresolved complexity. A record that belongs to its performers even though they did not write a word.</p>
+    <div class="prose rv">
+      <p>As an album, Candy Girl is a designed experience across time. The arc from desire through loss through camaraderie to unresolved complexity is a deliberate grammar. No anchor arrives at the end to tell you what it meant. The question of authorship is essential to acknowledge and then to complicate. Maurice Starr wrote these songs. New Edition performed them. But authorship and identity are distinct categories. The songs belong to Starr contractually; the emotional truth of the record belongs inescapably to the five teenagers who rendered it.</p>
+    </div>
+    <div class="tracks rv d1">
+      <div class="track"><div class="track-n">Track 01</div><div class="track-title">Gimme Your Love</div><div class="track-note">Opens mid-want. No introduction. Black desire as structural premise, not apology. The form trusts the listener to enter directly.</div></div>
+      <div class="track"><div class="track-n">Track 02</div><div class="track-title">She Gives Me a Bang</div><div class="track-note">Ebullience as political act. Black boys insisting on pleasure in a cultural moment that wanted them threatening or invisible.</div></div>
+      <div class="track"><div class="track-n">Track 03</div><div class="track-title">Is This the End</div><div class="track-note">The first turn toward loss. The question held open, not answered, not resolved. Teenagers allowed to not know.</div></div>
+      <div class="track"><div class="track-n">Track 04</div><div class="track-title">Pass the Beat / Popcorn Love</div><div class="track-note">The sharing of a beat between voices. Blackness as collective, not isolated. The music's texture enacts what the lyrics describe.</div></div>
+      <div class="track"><div class="track-n">Track 05</div><div class="track-title">Candy Girl</div><div class="track-note">The album's emotional center. Tresvant's falsetto reaches for softness in public: tenderness as agency, not its negation.</div></div>
+      <div class="track"><div class="track-n">Track 06</div><div class="track-title">Ohh Baby</div><div class="track-note">Structural breathing room. Simple affection between more complex emotional territory. The album earns its warmth by surrounding it.</div></div>
+      <div class="track"><div class="track-n">Track 07</div><div class="track-title">Should Have Never Told Me</div><div class="track-note">The most analytically charged track. What happens when you learn what is being said about you? The question echoes forward to 2005.</div></div>
+      <div class="track"><div class="track-n">Track 08</div><div class="track-title">Gotta Have Your Lovin'</div><div class="track-note">Love as necessity: "gotta have" rewrites Black emotional expression from performance to survival requirement.</div></div>
+      <div class="track"><div class="track-n">Track 09</div><div class="track-title">Jealous Girl</div><div class="track-note">The album closes on ambiguity. The refusal of easy moral clarity is itself an act of artistic independence. The record ends open.</div></div>
+    </div>
+    <div class="eyebrow rv" style="margin-top:44px;margin-bottom:20px">Close Readings</div>
+    <div class="cr rv">
+      <div class="cr-hd"><div class="cr-n">I</div><div class="cr-info"><div class="cr-label">Close Reading, Track 05</div><div class="cr-song">"Candy Girl" and the Politics of Tenderness</div></div></div>
+      <div class="cr-body">
+        <div class="prose"><p>Tresvant's use of falsetto required a specific kind of courage in 1983: to sing in falsetto as a young Black man before a national audience was to claim the right to be publicly soft. The song insists on Black masculine vulnerability as a form of presence rather than its negation. It does not perform toughness or emotional closure. It performs desire, care, and wonder. This is a political act that does not announce itself as one.</p></div>
+        <div class="cr-note"><div class="cr-note-l">Formal Note</div><div class="cr-note-t">Tresvant's falsetto is not a stylistic choice separable from the song's meaning. It is the meaning's primary vehicle. The register itself is doing analytical work: claiming a form of Black masculine presence the culture simultaneously needed and was ambivalent about receiving.</div></div>
+      </div>
+    </div>
+    <div class="cr rv d1">
+      <div class="cr-hd"><div class="cr-n">II</div><div class="cr-info"><div class="cr-label">Close Reading, Track 07</div><div class="cr-song">"Should Have Never Told Me" and the Pre-Framed Subject</div></div></div>
+      <div class="cr-body">
+        <div class="prose"><p>Read forward to 2005, the resonance is striking. The anchor's pre-segment narration is precisely this: information about Bobby Brown that arrives before Bobby can speak. The viewer has been told something. And like the song's speaker, Bobby must navigate a world where that telling has already done its work. The song holds the complexity without resolving it. This is exactly what the interview format cannot do.</p></div>
+        <div class="cr-note"><div class="cr-note-l">Connection to Interview</div><div class="cr-note-t">What do you do when your story has been told before you get to tell it? The album holds the question open. The interview is forced to answer it.</div></div>
+      </div>
+    </div>
+    <div class="cr rv d2">
+      <div class="cr-hd"><div class="cr-n">III</div><div class="cr-info"><div class="cr-label">Close Reading, Track 03</div><div class="cr-song">"Is This the End" and the Right to Uncertainty</div></div></div>
+      <div class="cr-body">
+        <div class="prose"><p>The title is a question, not a statement. The song does not declare that something is over; it holds the possibility of ending in suspension. This is the album granting its young subjects the right to not know, to inhabit uncertainty without being required to resolve it into legibility. The right to be publicly uncertain is a privilege that the interview format structurally denies. Television journalism requires legible positions.</p></div>
+        <div class="cr-note"><div class="cr-note-l">Formal Argument</div><div class="cr-note-t">The right to be publicly uncertain is not available in the interview format. The album grants it freely. This asymmetry is one of the clearest demonstrations of why comparing these two forms matters.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="interview" class="sec">
+  <div class="sec-inner wide">
+    <div class="eyebrow">The Interview</div>
+    <h2 class="sec-title">Being Bobby Brown: <em>Structured Voice</em></h2>
+    <p class="sec-lead">The NBC interview as a formal event: what it offers, what it withholds, and how its architecture determines what can be said inside it.</p>
+    <div class="prose rv">
+      <p>The key distinction is between theoretical agency and practical agency. Theoretically, the format provides Bobby with a platform: national television, the opportunity for live self-presentation. Practically, the format surrounds that platform with structural conditions Bobby did not set and cannot fully override. The anchor's narration arrives first, the questions determine the terrain, and the editorial decisions about what airs remain with NBC.</p>
+    </div>
+    <div class="anatomy rv d1">
+      <div class="anat-row"><div class="anat-k anchor">Anchor Narration</div><div class="anat-v">The segment opens with the anchor summarizing Bobby's career, its turbulence and controversies. This narration precedes Bobby's first word. The audience has been given a frame before the subject enters. The frame emphasizes the wound.</div></div>
+      <div class="anat-row"><div class="anat-k frame">Frame Construction</div><div class="anat-v">"Tumultuous career" as the organizing concept. This label selects the dramatic and the conflictual. It is factually defensible in the narrow sense while being narratively distorting in the broader one. The selection of which facts to include is itself an argument.</div></div>
+      <div class="anat-row"><div class="anat-k bobby">Bobby's Response</div><div class="anat-v">Bobby speaks confidently, directly, with evident intelligence and dignity. He pushes back where he can. But he is always responding, to the anchor's questions, to the established frame, to the accumulated cultural narrative that preceded him into the room.</div></div>
+      <div class="anat-row"><div class="anat-k bobby">Whitney's Presence</div><div class="anat-v">The couple's relationship is being consumed as spectacle. Their love, their tension, their domestic life made visible for public entertainment. This is celebrity debt being collected: the transparency debt.</div></div>
+      <div class="anat-row"><div class="anat-k edit">Editorial Control</div><div class="anat-v">What ultimately airs is not Bobby's decision. The anchor chooses which segments to run, which questions to prioritize, how to contextualize the exchange. Bobby's agency exists within these decisions but never over them.</div></div>
+    </div>
+    <div class="pq rv">
+      <div class="pq-t">"The interview does not deny Bobby a voice. It provides one, but inside a frame it constructed without him. Every response, however confident, is still a response. It is always downstream of the anchor's premise."</div>
+      <div class="pq-a">Project Analysis</div>
+    </div>
+  </div>
+</section>
+
+<section id="convo" class="sec">
+  <div class="sec-inner wide">
+    <div class="eyebrow">In Conversation</div>
+    <h2 class="sec-title">Album vs. Interview: <em>The Same Voice</em>, Two Forms</h2>
+    <p class="sec-lead">A direct comparative analysis moving between the two texts to show what each form allows and forecloses for the same Black subject.</p>
+    <div class="baf rv">
+      <div class="baf-cols">
+        <div class="baf-col-h alb">Candy Girl, The Album (1983)</div>
+        <div class="baf-col-h int">NBC Interview, Bobby Brown (2005)</div>
+      </div>
+      <div class="baf-row"><div class="baf-cell alb"><div class="baf-topic">Who Arrives First</div>The music arrives first. No narrator precedes New Edition. The listener enters the sound directly, mid-desire, mid-feeling, without context or explanation.</div><div class="baf-cell"><div class="baf-topic">Who Arrives First</div>The anchor arrives first. Bobby's career is narrated before his voice is heard. The frame is established before the subject enters it.</div></div>
+      <div class="baf-row"><div class="baf-cell alb"><div class="baf-topic">Emotional Range</div>Nine tracks hold joy, desire, loss, camaraderie, reproach, warmth, tenderness, need, and unresolved complexity. None privileged, none required to resolve.</div><div class="baf-cell"><div class="baf-topic">Emotional Range</div>The format requires legible positions. Questions must be answered. Uncertainty cannot be sustained. The anchor's arc determines the interview's emotional destination.</div></div>
+      <div class="baf-row"><div class="baf-cell alb"><div class="baf-topic">Wound and Skin</div>The album holds wound and skin simultaneously. Heartbreak alongside joy, uncertainty alongside confidence. Neither privileged. The form does not require the wound to be centered.</div><div class="baf-cell"><div class="baf-topic">Wound and Skin</div>The frame centers the wound. Bobby as artist and creator of New Jack Swing receives less structural attention. Hartman's framework applies directly here.</div></div>
+      <div class="baf-row"><div class="baf-cell alb"><div class="baf-topic">Collective vs. Individual</div>Five voices share the space. The harmonies enact collectivity. No single voice bears the full weight. New Edition as a community, not a specimen.</div><div class="baf-cell"><div class="baf-topic">Collective vs. Individual</div>Bobby appears alone, extracted from New Edition and the community that produced the group. The interview presents an individual subject for examination.</div></div>
+      <div class="baf-row"><div class="baf-cell alb"><div class="baf-topic">Bobby as Creator</div>Bobby's vocal presence on the album is origination. The music sets terms; the audience enters them. This is the formal privilege of the first speaker.</div><div class="baf-cell"><div class="baf-topic">Bobby as Redeemer</div>The interview is a redemption event. Bobby addresses a narrative already established. The redeemer's position concedes that the prosecutor's narrative is the one that matters.</div></div>
+    </div>
+    <div class="prose rv">
+      <p>Candy Girl gave New Edition something the interview never could: <strong>the right to be unresolved.</strong> The right to hold complexity without filing a story about it. The right to be public without being fully legible. For Black artists operating in a culture that consistently reduces Black public life to legible narratives, the album's formal permission to exist in unresolved complexity is a form of dignity the interview format structurally cannot provide.</p>
+    </div>
+  </div>
+</section>
+
+<section id="love" class="sec">
+  <div class="sec-inner wide">
+    <div class="eyebrow">Black Love</div>
+    <h2 class="sec-title">Love as <em>Subject and Spectacle</em></h2>
+    <p class="sec-lead">Drawing on Tomlinson and Cox's research on Black love in media, and on hooks, Berry, and Cantor to frame what the album and the interview each do with Black romantic life.</p>
+    <div class="prose rv">
+      <p>Candy Girl is, on its surface, a love album. But Black love in the album is not presented as spectacle. It is the subject matter, rendered with full emotional texture. Tomlinson and Cox write that "understanding systemic factors impacting Black couples' relational dynamics is essential to advancing the understanding of how media images interact with relational experiences within this population." In the NBC interview, Black love appears differently: as the organizing spectacle around which the interview is partly structured. Bobby and Whitney's relationship is being consumed as entertainment.</p>
+    </div>
+    <div class="love-grid rv d1">
+      <div class="love-card alb"><div class="love-card-l">Candy Girl, Love as Subject</div><div class="love-card-h">Black Romantic Experience Without the Outside Gaze</div><div class="love-card-b">The album's love songs do not perform Black romantic experience for consumption. They inhabit it. Tresvant's "Candy Girl," the collective romantic yearning, the harmonies: these are not translations of Black feeling into a mainstream idiom. They are the feeling itself, presented on its own terms.</div></div>
+      <div class="love-card int"><div class="love-card-l">NBC Interview, Love as Spectacle</div><div class="love-card-h">Bobby and Whitney Under the Celebrity Gaze</div><div class="love-card-b">By 2005, Bobby and Whitney's relationship had been processed through years of tabloid coverage. Tomlinson and Cox note that "these contrasting depictions illustrate the complexities in authentic Black family representations in the media and the desire for audiences to connect with the experiences of the characters." The interview services a transparency debt: access to the interior of a famous Black couple's relationship.</div></div>
+    </div>
+    <div class="eyebrow rv" style="margin-top:36px;margin-bottom:16px">Key Scholarship</div>
+    <div class="tc-quote rv"><div class="tc-q">"Berry (1998) noted that television is more of a socialization tool than one's family, so we must consider the influence it has, not only on how we perceive Black families but also on how Black families view themselves."</div><div class="tc-a">Tomlinson, Allison and Brandale Mills Cox. "Portraying Black Love in the Media." (56)</div></div>
+    <div class="tc-quote rv d1"><div class="tc-q">"Manatu (2003) and Hooks (2000) have said Black women do not experience love in the media, and if they do, these images are often created by men who objectify their sexuality. Because of their history of being depicted as either hypersexual or asexual, Black women are usually excluded from conversations about romance or love (Warner, 2015)."</div><div class="tc-a">Tomlinson, Allison and Brandale Mills Cox. "Portraying Black Love in the Media." (59-60)</div></div>
+    <div class="tc-quote rv d2"><div class="tc-q">"What makes Black Love unique is that 'bonds of affection and love that are forced in the midst of profound trauma and oppression have a resiliency that can inspire and sustain generations.'"</div><div class="tc-a">Hooks, p.155, 2001. Cited in Tomlinson, Allison and Brandale Mills Cox. "Portraying Black Love in the Media." (61)</div></div>
+    <div class="tc-quote rv d3"><div class="tc-q">"Eighty percent of respondents in a study of single Black adults reported that they hoped to marry; a richer understanding of Black love is central to creating accurate narratives that reflect lived experiences."</div><div class="tc-a">Tomlinson, Allison and Brandale Mills Cox. "Portraying Black Love in the Media." (64)</div></div>
+    <div class="note rv" style="margin-top:24px"><div class="note-l">On the Wilson Hypothesis</div><div class="note-b">Tomlinson and Cox document that the "formation of Black families has been directly affected by the disproportionality of Black women between the ages of 25 and 54 compared to Black men of the same age (Caucutt et al., 2018)." This disproportionality is correlated with higher rates of incarceration and unemployment among Black men, which began in the mid-1960s as a result of emerging police policies and civil rights issues. Tomlinson, Allison and Brandale Mills Cox. "Portraying Black Love in the Media." (62)</div></div>
+  </div>
+</section>
+
+<section id="icon" class="sec">
+  <div class="sec-inner wide">
+    <div class="eyebrow">Agency and Iconicity</div>
+    <h2 class="sec-title">The <em>Double Bind</em> of Black Icons</h2>
+    <p class="sec-lead">Drawing on Robin Boylorn Sewell's On Racial Icons: four case studies that illuminate the structural dynamics of Black iconicity and their application to New Edition and Bobby Brown.</p>
+    <div class="prose rv"><p>Sewell argues that Black celebrities occupy a peculiar double position, standing simultaneously as testament to and contrast from the communities they represent. Their iconicity is constructed by forces largely outside their control. As she writes, "certain public images that have come to represent, symbolize, or substitute for a larger historical narrative of race and Blackness in the United States often carry a sort of public burden, in their attempts to transform the despised into the idolized."</p></div>
+    <div class="sewell-quote rv"><div class="sq-t">"Racial iconicity hinges on a relationship between veneration and denigration and this twinning shapes the visual production and reception of Black American icons."</div><div class="sq-a">Sewell, On Racial Icons (8)</div></div>
+    <div class="icon-grid rv d1">
+      <div class="icon-card trayvon"><div class="icon-sub">Trayvon Martin</div><div class="icon-type">Imposed Iconicity Without Consent</div>        <div class="icon-card-body">Martin's case illustrates the darkest version of this project's argument: <strong>iconicity can be imposed on someone entirely without their participation.</strong> Sewell writes that "there is little doubt that a Black teenage boy is never seen as an 'ordinary' American, let alone an 'ordinary' child who deserves protection and guidance of adults and public authorities." The narrative constructed around Martin was built without him. Bobby Brown's pre-framed interview is a milder version of the same structural phenomenon.</div><div class="sewell-quote" style="margin-top:14px"><div class="sq-t">"The indexes of those impacted by the structures of racial violence are so numerous and so quotidian that we gravitate even more strongly to the singularity of the icon."</div><div class="sq-a">Sewell, Robin Boylorn. <em>On Racial Icons.</em> (31)</div></div></div>
+      <div class="icon-card obama"><div class="icon-sub">Barack Obama</div><div class="icon-type">Proactive Image Management</div>        <div class="icon-card-body">Obama's section addresses Black public figures who have resources attempting to frame their own image positively. Sewell notes that "while Obama's attempts to control his image open him to critiques of hypocrisy and lack of transparency, his careful cultivation of image triggers a different register when read through the history of photography as a deliberative means of self-determination." <strong>Bobby Brown's interview is a lower-resource version of the same project.</strong></div><div class="sewell-quote" style="margin-top:14px"><div class="sq-t">"Douglas strategically visualizes his journey from slave to orator, writer, and abolitionist. Moreover, the repetition in form and composition of his photographic portraits demonstrate that 'self is determined by the right to self-possess and possess rights.'"</div><div class="sq-a">Sewell, Robin Boylorn. <em>On Racial Icons.</em> Citing Wexler, Laura. (40)</div></div></div>
+      <div class="icon-card diana"><div class="icon-sub">Diana Ross</div><div class="icon-type">Black Music Celebrity and Perceptions of Excess</div>        <div class="icon-card-body">Ross's case illuminates the specific dynamics of Black music celebrity in relation to the racialized condemnation of Black excess. Sewell notes that "in the Motown system, artists were molded, sometimes against their stylistic preferences, toward mainstream acceptability, one that refuted notions of Black excess." <strong>The framing of Bobby Brown as "excessive"</strong> follows the same cultural logic traced through Ross's career.</div><div class="sewell-quote" style="margin-top:14px"><div class="sq-t">"Celebrity culture seems to provide a continual reaffirmation that upward mobility is possible in America and reinforces the belief that inequality is the result of personal failure rather than systematic social conditions."</div><div class="sq-a">Sternheimer, Karen. <em>Celebrity Culture and the American Dream.</em> Cited in Sewell, Robin Boylorn. <em>On Racial Icons.</em> (70-71)</div></div></div>
+      <div class="icon-card lebron"><div class="icon-sub">LeBron James and Serena Williams</div><div class="icon-type">Spectacle as Platform</div>        <div class="icon-card-body">Sewell describes the moment sports journalism "arranged a moment in which a real, flesh-and-blood human who has been transformed into a venerated, redemptive sports icon is asked to witness the undoing of his image." New Edition in 1983 were spectacle: five Black teenagers performing for a national audience. The question is whether they had leverage over what that spectacle communicated.</div><div class="sewell-quote" style="margin-top:14px"><div class="sq-t">"The ability to be wounded or murdered because of one's racialization, its likelihood and shattering consequences, is in and of itself a recurring wound, a collective inheritance, the keloid of a society built on racial exploitation, violence, and genocidal annihilation."</div><div class="sq-a">Sewell, Robin Boylorn. <em>On Racial Icons: Blackness and the Public Imagination.</em> (112)</div></div></div>
+    </div>
+    <div class="pq rv"><div class="pq-t">"What becomes of our icons, those venerated as well as denigrated, our outcasts, if we dream together in full recognition of our history and presence together?"</div><div class="pq-a">Sewell, On Racial Icons (117)</div></div>
+  </div>
+</section>
+
+<section id="debt" class="sec">
+  <div class="sec-inner wide">
+    <div class="eyebrow">Celebrity Debt</div>
+    <h2 class="sec-title">What Do Celebrities <em>Owe</em>?</h2>
+    <p class="sec-lead">The celebrity debt framework explains the logic driving the NBC interview's demand for Bobby Brown's self-accounting. Three debts, three different claims on Black public figures.</p>
+    <div class="debt-grid rv">
+      <div class="debt-card"><div class="debt-n">I</div><div class="debt-title">Transparency</div><div class="debt-sub">The Disclosure Debt</div><div class="debt-body">The public believes it has purchased access to the interior of a celebrity's life through the attention economy. Bobby and Whitney's relationship becomes legible as a debt payment. The reality show Being Bobby Brown is this debt being discharged publicly. Bobby reflected: "People wondered whether we were embarrassed by our depiction on the show, but we laughed our ass off throughout the whole thing. It was therapy for us." The demand for transparency preceded his willingness to provide it.</div></div>
+      <div class="debt-card"><div class="debt-n">II</div><div class="debt-title">Advocacy</div><div class="debt-sub">The Platform Debt</div><div class="debt-body">Celebrities at a certain level of cultural visibility are expected to broadcast their stances on social issues from their elevated platform. Sewell's analysis of LeBron James illuminates this: the icon is expected to represent not just his own interests but those of a community. Bobby Brown's status as a Black celebrity carries this expectation even when the interview never explicitly names it. His silence on political topics in 2005 is itself legible as debt default.</div></div>
+      <div class="debt-card"><div class="debt-n">III</div><div class="debt-title">Productivity</div><div class="debt-sub">The Output Debt</div><div class="debt-body">Sternheimer argues that "one of the primary functions of celebrity culture is to mirror notions of the American Dream and social mobility." This requires continuous output and continuous proof of achievement. Bobby's narrative in the interview is partly organized around demonstrating continued relevance and productivity. The decade-long arc from Don't Be Cruel to 2005 must be accounted for. His arc of success and struggle is itself the product being offered.</div></div>
+    </div>
+    <div class="pq rv"><div class="pq-t">"When the media began to write about me and Whitney together, they questioned everything about my character. It hurt me to my core. I felt like it was destroying what I had created as an entertainer."</div><div class="pq-a">Bobby Brown, Every Little Step (218)</div></div>
+  </div>
+</section>
+
+<section id="mimesis" class="sec">
+  <div class="sec-inner wide">
+    <div class="eyebrow">Mimesis and Propagation</div>
+    <h2 class="sec-title">The Form Travels. <em>The Credit Does Not.</em></h2>
+    <p class="sec-lead">How New Edition's template was replicated across American popular music, and what Lipsitz's framework of dangerous crossroads tells us about who benefits from cultural mimesis.</p>
+    <div class="prose rv"><p>Lipsitz's analysis of musical mimesis documents how forms propagate across communities with the form traveling while the credit and capital remain behind. New Edition established the grammar of group R&B in 1983. That grammar was then used to build New Kids on the Block by Maurice Starr using the exact same playbook. Michael Bivins closed the loop by signing Boyz II Men, who explicitly inherited and acknowledged the New Edition template. The structural template traveled; the financial and cultural benefit did not accrue proportionally to its originators.</p><p>Nelson George writes that within the Motown system, artists were "molded, sometimes against their stylistic preferences, toward mainstream acceptability." The Motown machine and the Streetwise Records machine operated by the same structural logic: Black creativity extracted, processed, and distributed under conditions of unequal ownership. Bivins's move behind the scenes as a producer and executive represents the most direct exercise of agency over this system: attempting to occupy the position of structural power rather than only the position of labor.</p></div>
+    <div class="chain rv d1">
+      <div class="chain-item"><div class="chain-n">1</div><div class="chain-c"><div class="chain-l">Origin</div><div class="chain-t">New Edition, Orchard Park, Roxbury. 1978 to 1983. Five Black teenagers from a housing project establish the grammar of group R&B: tight harmonies, synchronized choreography, emotional directness, Black masculine tenderness in public.</div></div></div>
+      <div class="chain-item"><div class="chain-n">2</div><div class="chain-c"><div class="chain-l">Extraction and Replication</div><div class="chain-t">Maurice Starr assembles New Kids on the Block using the exact same template he developed with New Edition. The form, the choreography, the vocal division, the emotional accessibility travel intact. The Roxbury origin and the specificity of Black experience do not travel with them.</div></div></div>
+      <div class="chain-item"><div class="chain-n">3</div><div class="chain-c"><div class="chain-l">Bobby Brown's New Jack Swing</div><div class="chain-t">Brown's departure from New Edition produces New Jack Swing in collaboration with Teddy Riley: a new genre fusing hip-hop production with R&B vocal performance. Don't Be Cruel (1988) becomes the template for a decade of popular music. Again: the form travels, the originator's credit and capital do not proportionally follow.</div></div></div>
+      <div class="chain-item"><div class="chain-n">4</div><div class="chain-c"><div class="chain-l">Boyz II Men and the Acknowledged Inheritance</div><div class="chain-t">Michael Bivins signs and co-produces Boyz II Men, who explicitly cite New Edition as their template. This represents a partial correction: an originator participating structurally in the propagation of the form he helped create. The acknowledgment is there; the structural conditions that prevented it the first time are somewhat corrected.</div></div></div>
+      <div class="chain-item"><div class="chain-n">5</div><div class="chain-c"><div class="chain-l">Diana Ross and the Motown Parallel</div><div class="chain-t">Sewell's analysis of Ross illuminates New Edition's structural position. Gordy "built Motown into one of the most successful and lucrative recording labels of the era by selling the creations of other Black Americans." The artists were the product; the system was the business. New Edition's relationship to Streetwise Records follows this template precisely.</div></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="blight" class="sec">
+  <div class="sec-inner wide">
+    <div class="eyebrow">Social Status and Career Standing</div>
+    <h2 class="sec-title">Black as <em>Blight</em></h2>
+    <p class="sec-lead">How the framing of Bobby Brown's "tumultuous career" participates in a broader cultural pattern of reading Black public struggle as confirmation of a thesis about Black life itself.</p>
+    <div class="prose rv"><p>"Black as blight" names a specific ideological formation in American media: the tendency to read the struggles of Black public figures not as individual events but as confirmation of a broader thesis about Black life. This formation operates through selection, through the editorial decision to emphasize certain facts and omit others, and through framing: the vocabulary used, the contexts invoked, the moral weight assigned.</p></div>
+    <div class="blight-list rv d1">
+      <div class="blight-item"><div class="blight-n">1</div><div class="blight-c"><div class="blight-cl">The Mechanism: Selection</div><div class="blight-ct">The NBC interview's pre-segment narration selects "tumultuous career" as the organizing descriptor. The extraordinary creative achievement of the New Jack Swing era and the genuine artistic innovation of Bobby's solo work receive less structural attention than his conflicts and struggles.</div></div></div>
+      <div class="blight-item"><div class="blight-n">2</div><div class="blight-c"><div class="blight-cl">The Mechanism: Framing</div><div class="blight-ct">The framing of Bobby as the man who "corrupted" Whitney Houston assigns him a specific role in a morality play organized around Black excess and decline. This framing was racially inflected even when it did not announce itself as such, drawing on longstanding cultural assumptions about Black masculine destructiveness that Collins and hooks both document.</div></div></div>
+      <div class="blight-item"><div class="blight-n">3</div><div class="blight-c"><div class="blight-cl">The Mechanism: Generalization</div><div class="blight-ct">Individual failures attributed to Black public figures are often treated as evidence of a general pattern. White celebrities' failures tend to be read as individual; Black celebrities' as representative. Entman and Rojecki's empirical research documents this structural asymmetry across decades of American media.</div></div></div>
+      <div class="blight-item"><div class="blight-n">4</div><div class="blight-c"><div class="blight-cl">Bobby's Own Account</div><div class="blight-ct">Brown writes: "When I look back on the evolution of my bad-boy reputation, I realize that it was only after I got together with Whitney that I really became the bad boy, at least in the eyes of the media. Before Whitney, it wasn't open season on my personal life. When the media began to write about me and Whitney together, they questioned everything about my character."</div></div></div>
+      <div class="blight-item"><div class="blight-n">5</div><div class="blight-c"><div class="blight-cl">The Counter: What the Album Refuses</div><div class="blight-ct">Candy Girl refuses the "Black as blight" frame entirely, not because it is oppositional, but because it precedes the frame. In 1983, Bobby Brown is not yet a site of cultural anxiety about Black excess. He is a teenager from Roxbury singing about love. The album's formal position outside the media machinery of celebrity pathology is one of its most analytically important features.</div></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="auto" class="sec">
+  <div class="sec-inner wide">
+    <div class="eyebrow">Every Little Step</div>
+    <h2 class="sec-title">The Autobiography as <em>Image Remaking</em></h2>
+    <p class="sec-lead">Bobby Brown's memoir is a third text alongside the album and the interview: a form that allows something neither of the others quite can. Its quotes are organized here as evidence, grouped by theme.</p>
+    <div class="prose rv"><p>Every Little Step is, formally, an act of image remaking. Brown works to acknowledge all facets of his life: good and bad, willful and uncontrollable, self-inflicted and imposed. Over the course of the book, Brown's anecdotes shamelessly, though not remorselessly, reflect upon his past to provide a more complete picture of his lived experiences. This completeness is itself the argument against the media's reductive narrative.</p></div>
+    <div class="eyebrow rv" style="margin-bottom:16px">On Origins and Family</div>
+    <div class="auto-grid rv d1">
+      <div class="auto-card"><div class="auto-card-l">On His Parents</div><div class="auto-card-q">"Both of my parents had jobs: my mother, Carole, was a teacher and my dad, Herbert, was a construction worker building big skyscrapers downtown, and there was plenty of love flowing through the Brown household. We were in a good place."</div><div class="auto-card-a">Every Little Step (13)</div></div>
+      <div class="auto-card"><div class="auto-card-l">On His Father's Work Ethic</div><div class="auto-card-q">"Anytime he got the chance, my father would show us the buildings he had helped to construct. 'A workingman is everything,' he would tell us. 'When you got work to do, you work hard, do your job and go on home.'"</div><div class="auto-card-a">Every Little Step (13)</div></div>
+      <div class="auto-card"><div class="auto-card-l">On Community in Orchard Park</div><div class="auto-card-q">"Our family was one of the few in Orchard Park that had both a mother and a father in the household, so we were looked upon as the brown-skinned Brady Bunch. And my mother was one of those generous Mother Teresa types who would welcome and care for anybody who was in need."</div><div class="auto-card-a">Every Little Step (14)</div></div>
+      <div class="auto-card"><div class="auto-card-l">On Childhood Freedom and Risk</div><div class="auto-card-q">"When we were still in elementary school, no more than eleven or twelve, we had the freedom to roam the streets. Of course, that meant we were always just half a second off trouble, just inches away from the back seat of a squad car. But we also had the space to explore the things that interested us."</div><div class="auto-card-a">Every Little Step (15)</div></div>
+    </div>
+    <div class="eyebrow rv" style="margin-top:36px;margin-bottom:16px">On Violence, Loss, and Witness</div>
+    <div class="auto-grid rv d1">
+      <div class="auto-card"><div class="auto-card-l">On His Mother's Arrest</div><div class="auto-card-q">"When I looked out the window, I saw my mother in an angry confrontation with the police. One of the officers lifted his billy club and hit her in the face with it. He busted her eye and she staggered back. I started crying hysterically as I watched them put her in handcuffs and whisk her away."</div><div class="auto-card-a">Every Little Step (24-25)</div></div>
+      <div class="auto-card"><div class="auto-card-l">On Jimmy's Death</div><div class="auto-card-q">"I had seen a couple of people get shot in OP by then, but this was the first time violence had struck somebody I knew, practically a member of my family. Most of us were still just little kids trying to have fun. We hadn't made the transition to any type of killer mind-set."</div><div class="auto-card-a">Every Little Step (32-33)</div></div>
+    </div>
+    <div class="eyebrow rv" style="margin-top:36px;margin-bottom:16px">On Whitney and Marriage</div>
+    <div class="auto-grid rv d1">
+      <div class="auto-card"><div class="auto-card-l">On Their First Meeting</div><div class="auto-card-q">"As we played piano together, our hands touched. Then we shared a long, soft kiss. It was like a scene straight out of Casablanca, some old romantic flick. I knew what was about to happen."</div><div class="auto-card-a">Every Little Step (130)</div></div>
+      <div class="auto-card"><div class="auto-card-l">On Proposing</div><div class="auto-card-q">"When I decided to propose, I went and had a conversation with her father. I wanted to do it old-school, like a perfect gentleman."</div><div class="auto-card-a">Every Little Step (138)</div></div>
+      <div class="auto-card"><div class="auto-card-l">On Media Pressure on the Marriage</div><div class="auto-card-q">"From the moment we announced to the world that we were going to get married, we became the target of a media and public campaign that had the single goal of tearing us apart. Were we really the only ones in the world who wanted our marriage to succeed? Sometimes that's exactly how it felt."</div><div class="auto-card-a">Every Little Step (141)</div></div>
+      <div class="auto-card"><div class="auto-card-l">On Their Public Image</div><div class="auto-card-q">"The emasculating image of me as a leech continued throughout our marriage. When our marriage ended, it only intensified. That's one of the main reasons why I walked away without asking for a dime, even though I came into the marriage with tens of millions of dollars."</div><div class="auto-card-a">Every Little Step (215)</div></div>
+    </div>
+    <div class="eyebrow rv" style="margin-top:36px;margin-bottom:16px">On Self-Image, Reputation, and the Future</div>
+    <div class="auto-grid rv d1">
+      <div class="auto-card"><div class="auto-card-l">On His Skin Color and Insecurity</div><div class="auto-card-q">"As a community we're slowly starting to get away from our color prejudices, but it was still definitely in effect in the seventies and eighties. Black people can say some mean, dirty stuff to each other. They would call me 'darkie' or 'black,' or 'five-head.'"</div><div class="auto-card-a">Every Little Step (46-47)</div></div>
+      <div class="auto-card"><div class="auto-card-l">On Style and Self-Presentation</div><div class="auto-card-q">"I've always been drawn to style, figuring out how to present myself in a way that's different from everybody else."</div><div class="auto-card-a">Every Little Step (16)</div></div>
+      <div class="auto-card"><div class="auto-card-l">On the Media and Pain</div><div class="auto-card-q">"Don't keep coming at me with bullshit, just poking at me, because it hurts. I'm still a human being. No one knows what that much tragedy felt like to me."</div><div class="auto-card-a">Every Little Step (321)</div></div>
+      <div class="auto-card"><div class="auto-card-l">On Wanting Normalcy</div><div class="auto-card-q">"I wanted to try to find some normalcy, a life that wasn't lived in the headlines and tabloid front pages."</div><div class="auto-card-a">Every Little Step (221)</div></div>
+    </div>
+    <div class="eyebrow rv" style="margin-top:36px;margin-bottom:16px">Voices from the Autobiography</div>
+    <div class="voices-grid rv d1">
+      <div class="voice-card"><div class="voice-l">Ralph Tresvant</div><div class="voice-name">On the "Bad Boy" Origin</div><div class="voice-q">"In my opinion, this moment is where the whole 'bad boy' reputation started, when he left the group. Despite what was going on behind the scenes with the shady financing and deceitful managers, Bobby got labeled as arrogant and uncooperative. A troublemaker. A bad boy."</div></div>
+      <div class="voice-card"><div class="voice-l">Tommy Brown (Bobby's Brother)</div><div class="voice-name">On Bobby's Character</div><div class="voice-q">"The world wants him to be crazy, they like when he acts that way, but at some point it's too much for him to handle. Everybody wanted to know about their relationship, but with a lack of privacy and way too much attention, a relationship is stressful."</div></div>
+      <div class="voice-card"><div class="voice-l">Leolah Brown (Bobby's Sister)</div><div class="voice-name">On His Generosity</div><div class="voice-q">"Bobby would walk around with a checkbook and write checks for anybody who was in need. He paid people's rent; he paid for people's funerals. He would never ask questions or ask for proof. And the public would never hear about any of it."</div></div>
+      <div class="voice-card"><div class="voice-l">Landon Brown (Bobby's Son)</div><div class="voice-name">On Privacy and Pressure</div><div class="voice-q">"People don't get that he's human; he has to deal with human things. The world wants him to be crazy, they like when he acts that way, but at some point it's too much for him to handle."</div></div>
+      <div class="voice-card"><div class="voice-l">Alicia Etheredge Brown (Bobby's Wife)</div><div class="voice-name">On How They Found Each Other</div><div class="voice-q">"It took maybe a year of being around each other, him sleeping on my couch, going through his divorce, actually moving into my house, before anything happened between us. How did the romance start? It was just a process of us growing closer, sharing intimate things. I just realized I loved him and adored him."</div></div>
+      <div class="voice-card"><div class="voice-l">Leolah Brown on Whitney</div><div class="voice-name">On Why Whitney Loved Bobby</div><div class="voice-q">"She said that Bobby was never anybody but himself, which was important to her. She said she had dated men who were always acting too timid and too shy because of who she was. But she said Bobby was different. He didn't give a damn. He was himself, take it or leave it."</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="profiles" class="sec">
+  <div class="sec-inner wide">
+    <div class="eyebrow">Member Profiles</div>
+    <h2 class="sec-title">The Six and <em>Their Trajectories</em></h2>
+    <p class="sec-lead">Brief profiles of all New Edition members. Each trajectory illustrates a different relationship to the celebrity debt framework and the group's collective iconicity.</p>
+    <div class="prof-grid rv">
+      <div class="prof-card ralph"><div class="prof-top"><div class="prof-init">R</div><div class="prof-name">Ralph Tresvant</div><div class="prof-dob">b. May 15, 1968, Roxbury</div><div class="prof-role">Lead Vocalist</div></div><div class="prof-body"><div class="prof-bio">Tresvant's falsetto was New Edition's emotional center and the primary vehicle of Candy Girl's analytical argument. His lead on "Can You Stand the Rain" established the template for 1990s R&B balladry.</div><div class="prof-solo-l">Solo Career</div><div class="prof-solo-t">His 1990 self-titled debut produced "Sensitivity," a top-five hit. He navigated celebrity debt by limiting public disclosure rather than offering the transparency the tabloid press demanded.</div></div></div>
+      <div class="prof-card bobby"><div class="prof-top"><div class="prof-init">B</div><div class="prof-name">Bobby Brown</div><div class="prof-dob">b. February 5, 1969, Roxbury</div><div class="prof-role">Vocalist and Dancer</div></div><div class="prof-body"><div class="prof-bio">The project's primary analytical subject. Brown's departure from New Edition in 1986, his invention of New Jack Swing with Teddy Riley, and his marriage to Whitney Houston each represent a different chapter in the negotiation between Black artistic agency and media co-optation.</div><div class="prof-solo-l">Central Figure</div><div class="prof-solo-t">See the Every Little Step section and the extended profile below for full analysis of his four career phases.</div></div></div>
+      <div class="prof-card ronnie"><div class="prof-top"><div class="prof-init">R</div><div class="prof-name">Ronnie DeVoe</div><div class="prof-dob">b. November 17, 1967, Roxbury</div><div class="prof-role">Vocalist</div></div><div class="prof-body"><div class="prof-bio">DeVoe, Bell, and Bivins formed Bell Biv DeVoe in 1990, producing Poison, one of the defining albums of the New Jack Swing era. Their public image was collectively managed, distributing the celebrity debt load across three people rather than concentrating it on one.</div><div class="prof-solo-l">Bell Biv DeVoe</div><div class="prof-solo-t">Poison sold over one million copies. A different structural solution to the same celebrity debt problem: productivity without individual exposure.</div></div></div>
+      <div class="prof-card ricky"><div class="prof-top"><div class="prof-init">R</div><div class="prof-name">Ricky Bell</div><div class="prof-dob">b. September 18, 1967, Roxbury</div><div class="prof-role">Vocalist</div></div><div class="prof-body"><div class="prof-bio">Bell's voice anchored BBD's harmonic structure. His arc illustrates one resolution of the celebrity debt dilemma: remain associated with group contexts rather than pursuing an individual public profile that would invite individual scrutiny.</div><div class="prof-solo-l">Post-New Edition Career</div><div class="prof-solo-t">The group structure distributes both the creative labor and the celebrity debt. Bell's choice to remain embedded in collaborative contexts is itself a form of structural self-protection.</div></div></div>
+      <div class="prof-card michael"><div class="prof-top"><div class="prof-init">M</div><div class="prof-name">Michael Bivins</div><div class="prof-dob">b. August 10, 1968, Roxbury</div><div class="prof-role">Vocalist and Producer</div></div><div class="prof-body"><div class="prof-bio">Bivins is the group's most significant figure in terms of structural dynamics. His transition from performer to manager and producer, signing Boyz II Men and Another Bad Creation, represents the most direct exercise of agency over the system New Edition had navigated as artists.</div><div class="prof-solo-l">Producer and Executive</div><div class="prof-solo-t">Bivins's move behind the scenes is a Black artist attempting to occupy the position of structural power rather than only the position of labor. His work with Boyz II Men closes the loop on the mimesis chain.</div></div></div>
+      <div class="prof-card johnny"><div class="prof-top"><div class="prof-init">J</div><div class="prof-name">Johnny Gill</div><div class="prof-dob">b. May 22, 1966, Washington, D.C.</div><div class="prof-role">Vocalist (joined 1987)</div></div><div class="prof-body"><div class="prof-bio">Gill joined New Edition in 1987 following Bobby Brown's departure, bringing a gospel-rooted vocal style. His presence complicates the icon: the brand was not entirely synonymous with any fixed membership. The iconicity outlasted the personnel.</div><div class="prof-solo-l">Solo Career</div><div class="prof-solo-t">Gill's 1990 self-titled album was a commercial and critical success. He entered as a replacement and emerged as a credible solo artist. The iconicity was transferable.</div></div></div>
+    </div>
+    <div class="bobby-deep rv">
+      <div class="bobby-deep-h">Bobby Brown, Extended Profile</div>
+      <div class="bobby-deep-s">Creator, redeemer, icon, spectacle, and the question of which of these he was allowed to be when.</div>
+      <div class="prose">
+        <p><strong>Phase One: The New Edition Years (1983 to 1986).</strong> Bobby was the group's most physically dynamic performer. His dancing set the choreographic standard and established a stage presence that exceeded the music's emotional content. He was also reputedly the most commercially ambitious member, which contributed to internal tensions leading to his departure. The industry gave him little chance of solo success.</p>
+        <p><strong>Phase Two: The Creative Peak (1988 to 1992).</strong> Don't Be Cruel (1988), co-produced with Teddy Riley, invented New Jack Swing: a genre that fused hip-hop production aesthetics with R&B vocal performance. Bobby's instincts about his own artistic direction had been right. He was not following a trend. He was making one. This is the period in which Bobby Brown was unambiguously a creator, setting terms rather than responding to them.</p>
+        <p><strong>Phase Three: The Marriage and the Tabloid Years (1992 to 2005).</strong> His 1992 marriage to Whitney Houston changed the terms of his celebrity in ways that neither of them fully controlled. The marriage became the organizing spectacle of both their public lives. Bobby writes: "In my twenties, I fell in love with the biggest music star on the planet. Our marriage kept more than a few gossip tabloids in business."</p>
+        <p><strong>Phase Four: The NBC Interview (2005).</strong> The interview is the site where all of these phases converge. Bobby appears not primarily as an artist but as a celebrity who owes the public an accounting. <strong>He is the redeemer in this moment, not the creator.</strong> And the form of the interview ensures that his redemption, however confident, is always happening inside someone else's terms.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="future" class="sec">
+  <div class="sec-inner wide">
+    <div class="eyebrow">The Future</div>
+    <h2 class="sec-title">New Edition's <em>Continuing Story</em></h2>
+    <p class="sec-lead">Four dimensions of New Edition's relationship to what comes next: activism, commerce, new artists, and the question Sewell ends with about what we dream together.</p>
+    <div class="future-grid rv">
+      <div class="future-card"><div class="future-card-l">New Edition and Activism</div><div class="future-card-h">The Platform Debt, Revisited</div><div class="future-card-b">New Edition's public silence on political matters contrasts with Robin D.G. Kelley's argument that racial injustice is "the rule, not the exception, to the design of modern society." The celebrity debt framework asks what New Edition owes their community in terms of advocacy. Their activism has historically operated through their music's emotional register, through the permission they gave young Black audiences to feel publicly, rather than through explicit political statement. This is itself a political position worth examining.</div></div>
+      <div class="future-card"><div class="future-card-l">New Edition and Commerce</div><div class="future-card-h">Sponsorships, Commercialism, Ownership</div><div class="future-card-b">The trajectory from $500 and a Betamax to contemporary commercial partnerships is also a story about structural change and structural persistence. The Rolling Stone article on New Edition's Rock Hall fan vote documents continued institutional under-recognition even as commercial value is acknowledged. The group's relationship to commercialism is complicated by decades of having their template replicated by others who retained a larger share of the financial benefit.</div></div>
+      <div class="future-card"><div class="future-card-l">New Edition and Rising Artists</div><div class="future-card-h">The Template and Its Inheritors</div><div class="future-card-b">Diana Ross writes in Secrets of a Sparrow: "If God gave me one job in life, it is to help a world in which we are all just people." New Edition's relationship to rising Black artists is both structural and cultural. Bivins's work with Boyz II Men and Another Bad Creation represents one model of this relationship. The question for the future is whether the structural conditions that prevented New Edition from fully benefiting from their own template have changed enough to protect the next generation's interests.</div></div>
+      <div class="future-card"><div class="future-card-l">Sewell's Closing Question</div><div class="future-card-h">Dreaming Together</div><div class="future-card-b">Sewell closes On Racial Icons with a question rather than a conclusion: "What becomes of our icons, those venerated as well as denigrated, our outcasts, if we dream together in full recognition of our history and presence together?" New Edition's legacy is not settled. The BET miniseries, the continued fan engagement, the Instagram presence of all six members, the ongoing debate about Rock Hall recognition: these are all ongoing negotiations about what the group means and who gets to say so. The question of who tells the story is still open.</div></div>
+    </div>
+    <div class="pq rv"><div class="pq-t">"Still, I know that as a Black woman, I remain in bondage. I know that all Black people do in spite of the tremendous advances we have made over the century. That's because the one thing none of us has been able to destroy completely is hate. If God gave me one job in life, it is to help a world in which we are all just people."</div><div class="pq-a">Ross, Diana. <em>Secrets of a Sparrow.</em> Villard Books, 1993.</div></div>
+  </div>
+</section>
+
+<section id="sources" class="sec">
+  <div class="sec-inner wide">
+    <div class="eyebrow">Sources and Research</div>
+    <h2 class="sec-title">12 Sources, <em>Annotated</em></h2>
+    <p class="sec-lead">The most essential primary texts, theoretical frameworks, and scholarship grounding the project's analytical claims.</p>
+    <div class="source-list">
+      <div class="src rv"><div class="src-n">01</div><div class="src-c"><div class="src-type">Primary Source, Album</div><div class="src-cite">New Edition. <em>Candy Girl.</em> Streetwise Records, 1983. Produced by Maurice Starr.</div><div class="src-ann">The project's first primary text. The album is analyzed through close readings of "Candy Girl," "Should Have Never Told Me," and "Is This the End," and compared directly against the NBC interview throughout the conversation section.</div></div></div>
+      <div class="src rv d1"><div class="src-n">02</div><div class="src-c"><div class="src-type">Primary Source, Interview</div><div class="src-cite">Brown, Bobby and Houston, Whitney. <em>Being Bobby Brown.</em> NBC News Report and Interview. NBC, 2005. Archived via YouTube.</div><div class="src-ann">The project's second primary text. Analyzed as a formal structure: who arrives first, what questions are asked, who controls the editorial decisions, and how the frame is built before Bobby speaks a word.</div></div></div>
+      <div class="src rv d2"><div class="src-n">03</div><div class="src-c"><div class="src-type">Primary Source, Autobiography</div><div class="src-cite">Brown, Bobby. <em>Every Little Step: My Story.</em> Dey Street Books, 2016.</div><div class="src-ann">A third primary text providing Brown's own account of all four career phases. The autobiography is itself an act of image remaking, acknowledging all facets of his life to provide a more complete picture than the media's frame allowed. Quotes from Brown and six people in his life are drawn directly from this text.</div></div></div>
+      <div class="src rv"><div class="src-n">04</div><div class="src-c"><div class="src-type">Book, Theoretical Framework</div><div class="src-cite">Sewell, Robin Boylorn. <em>On Racial Icons: Blackness and the Public Imagination.</em> Rutgers University Press, 2015.</div><div class="src-ann">The project's primary theoretical framework. Four case studies on Trayvon Martin, Obama, Diana Ross, and LeBron James each illuminate a different dimension of how Black iconicity is constructed, contested, and exploited. Sewell's argument that racial iconicity "hinges on a relationship between veneration and denigration" shapes the entire iconicity section.</div></div></div>
+      <div class="src rv d1"><div class="src-n">05</div><div class="src-c"><div class="src-type">Essay, Methodology</div><div class="src-cite">Roberts, Jennifer. "The Power of Patience: Teaching Students the Value of Deceleration and Immersive Attention." <em>Harvard Magazine,</em> 2013.</div><div class="src-ann">The methodological grounding for this project. Roberts argues that deceleration is "a productive process, a form of skilled apprehension that can orient students in critical ways to the contemporary world." Applied directly to the problem of fast media narratives about Black public figures.</div></div></div>
+      <div class="src rv d2"><div class="src-n">06</div><div class="src-c"><div class="src-type">Article, Black Love in Media</div><div class="src-cite">Tomlinson, Allison and Brandale Mills Cox. "Portraying Black Love in the Media: Bridging the Gap Between Representations and Real-Life Experiences of Black Romantic Relationships and Families." 2020.</div><div class="src-ann">Primary framework for the Black love section. Provides the CRT analysis, documentation of the Wilson hypothesis, the Berry socialization argument, and extensive scholarship on Black romantic representation in media. Directly applicable to the Bobby and Whitney dynamic in the NBC interview.</div></div></div>
+      <div class="src rv"><div class="src-n">07</div><div class="src-c"><div class="src-type">Book, Narrative Recovery</div><div class="src-cite">Hartman, Saidiya. <em>Wayward Lives, Beautiful Experiments.</em> W.W. Norton, 2019.</div><div class="src-ann">The wound and skin framework used throughout this project comes from Hartman's methodology of recovering Black narrative from institutional framing. Her argument that institutional documents center the wound at the expense of the full life is the direct theoretical basis for analyzing how the NBC interview frames Bobby Brown.</div></div></div>
+      <div class="src rv d1"><div class="src-n">08</div><div class="src-c"><div class="src-type">Book, Black Love</div><div class="src-cite">hooks, bell. <em>All About Love: New Visions.</em> William Morrow, 2000. Also: <em>Salvation: Black People and Love.</em> William Morrow, 2001. Also: <em>We Real Cool: Black Men and Masculinity.</em> Routledge, 2004.</div><div class="src-ann">hooks's argument that Black love has "a resiliency that can inspire and sustain generations" provides the theoretical center of the Black love section. We Real Cool provides essential context for reading Black masculine identity and the specific forms of public scrutiny to which Black men are subjected.</div></div></div>
+      <div class="src rv d2"><div class="src-n">09</div><div class="src-c"><div class="src-type">Book, Music Industry History</div><div class="src-cite">George, Nelson. <em>The Death of Rhythm and Blues.</em> Pantheon Books, 1988. Also: <em>Where Did Our Love Go? The Rise and Fall of the Motown Sound.</em> St. Martin's Press, 1985.</div><div class="src-ann">Essential for contextualizing New Edition's structural position within the music industry. George documents how Motown built itself "by selling the creations of other Black Americans," a structural template that prefigures New Edition's relationship to Streetwise Records and Maurice Starr.</div></div></div>
+      <div class="src rv"><div class="src-n">10</div><div class="src-c"><div class="src-type">Book, Celebrity Culture</div><div class="src-cite">Sternheimer, Karen. <em>Celebrity Culture and the American Dream: Stardom and Social Mobility.</em> Routledge, 2011.</div><div class="src-ann">Sternheimer's argument that celebrity culture "reinforces the belief that inequality is the result of personal failure rather than systematic social conditions" is applied throughout the celebrity debt framework and the iconicity section. Cited directly within Sewell's analysis of Diana Ross and LeBron James.</div></div></div>
+      <div class="src rv d1"><div class="src-n">11</div><div class="src-c"><div class="src-type">Book, Cultural Appropriation</div><div class="src-cite">Lipsitz, George. <em>Dangerous Crossroads: Popular Music, Postmodernism, and the Poetics of Place.</em> Verso, 1994.</div><div class="src-ann">Provides the theoretical grounding for the mimesis section. Lipsitz documents how musical forms propagate across communities with the form traveling while credit and capital remain behind. Directly applicable to the New Edition to New Kids on the Block template chain.</div></div></div>
+      <div class="src rv d2"><div class="src-n">12</div><div class="src-c"><div class="src-type">Primary Source, Social Media</div><div class="src-cite">New Edition, Bobby Brown, Ralph Tresvant, Ricky Bell, Michael Bivins, Ronnie DeVoe, Johnny Gill. Official Instagram accounts, 2023 to present.</div><div class="src-ann">The members' continuing social media presence is itself a primary text about who tells the story now and how the form has changed since 1983 and 2005. Their Instagram activity documents the ongoing negotiation between Black artist self-presentation and public reception that the project traces throughout.</div></div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div>
+    <div class="ft-l">Group Members</div>
+    <div class="ft-name">Obinna Njoku</div><div class="ft-sub">AMST 2650, Cornell University</div>
+    <div class="ft-name">Trenton Banks</div><div class="ft-sub">AMST 2650, Cornell University</div>
+    <div class="ft-name">Wyatt Tamamoto</div><div class="ft-sub">AMST 2650, Cornell University</div>
+  </div>
+  <div>
+    <div class="ft-l">Course</div>
+    <div class="ft-text">AMST 2650: Introduction to African American Literature<br>Dr. Chelsea M. Frazier<br>Cornell University, Spring 2026<br><br>Digital Humanities Final Project<br>Submitted via Canvas Project Board</div>
+  </div>
+  <div>
+    <div class="ft-l">Project</div>
+          <div class="ft-text">This project analyzes how biographical narrative formation operates differently in an artist's music than in subsequent television media portrayals, using New Edition's Candy Girl (1983) and Bobby Brown's NBC interview (2005) as primary texts. 12 sources. 15 sections. One argument: the form through which Black stories travel is never politically neutral.</div>
+  </div>
+</footer>
+<div class="ft-bar">
+  <span class="ft-copy">2026, Njoku, Banks, Tamamoto, AMST 2650, Cornell University</span>
+  <span class="ft-copy">Who Tells the Story?</span>
+</div>
+</div>
+
+<script>
+const C=document.getElementById('cur');
+document.addEventListener('mousemove',e=>{C.style.left=e.clientX+'px';C.style.top=e.clientY+'px'});
+document.querySelectorAll('a,button,.track,.prof-card,.src,.baf-row,.icon-card,.auto-card,.voice-card,.debt-card,.future-card,.chain-item,.fact-card,.tc-quote').forEach(el=>{
+  el.addEventListener('mouseenter',()=>C.classList.add('big'));
+  el.addEventListener('mouseleave',()=>C.classList.remove('big'));
+});
+
+function enterSite(){
+  document.getElementById('splash').classList.add('gone');
+  setTimeout(()=>{
+    const s=document.getElementById('splash');
+    if(s)s.remove();
+    startCounters();
+  },900);
+}
+
+function startCounters(){}
+
+window.addEventListener('scroll',()=>{
+  const pct=window.scrollY/(document.body.scrollHeight-window.innerHeight)*100;
+  document.getElementById('prog').style.width=pct+'%';
+  updateNav();
+},{passive:true});
+
+const ids=['hero','intro','patience','origin','album','interview','convo','love','icon','debt','mimesis','blight','auto','profiles','future','sources'];
+function updateNav(){
+  const y=window.scrollY+130;
+  ids.forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    const lk=document.querySelector(`.nav-link[href="#${id}"]`);
+    if(!lk)return;
+    if(y>=el.offsetTop&&y<el.offsetTop+el.offsetHeight)lk.classList.add('on');
+    else lk.classList.remove('on');
+  });
+}
+function toggleNav(){
+  document.getElementById('nav').classList.toggle('open');
+  document.getElementById('burger').classList.toggle('x');
+}
+document.querySelectorAll('.nav-link').forEach(l=>l.addEventListener('click',()=>{
+  if(window.innerWidth<1080){document.getElementById('nav').classList.remove('open');document.getElementById('burger').classList.remove('x');}
+}));
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    const t=document.getElementById(a.getAttribute('href').slice(1));
+    if(t)t.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+});
+const ro=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');ro.unobserve(e.target);}});
+},{threshold:0.08});
+document.querySelectorAll('.rv,.rv-left,.rv-scale').forEach(el=>ro.observe(el));
+</script>
+</body>
+</html>
